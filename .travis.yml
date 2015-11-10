@@ -4,11 +4,6 @@ language: python
 python:
   - 3.4
   - 3.5
-before_install:
-  - travis_retry sudo apt-get update -qq
-  # Set this so sudo executes the correct python binary
-  #   Anything not using sudo will already have the correct environment
-  - export VENV_BIN="$VIRTUAL_ENV/bin" && echo "VENV_BIN set to $VENV_BIN"
 install:
   #  Install Python packages / dependencies
   #    coverage
@@ -18,6 +13,7 @@ install:
   #    pylint
   - travis_retry pip install pylint
 script:
-  - sudo $VENV_BIN/pip install .
+  - pip install .
+  - pylint imageroller
 matrix:
   fast_finish: true
