@@ -12,11 +12,11 @@ before_install:
 install:
   #  Install Python packages / dependencies
   #    coverage
-  - travis_retry pip install coverage
+  - travis_retry sudo pip install coverage
   #    coveralls
-  - travis_retry pip install coveralls
+  - travis_retry sudo pip install coveralls
   #    pylint
-  - travis_retry pip install pylint
+  - travis_retry sudo pip install pylint
 script:
   - sudo $VENV_BIN/pip install .
 matrix:
