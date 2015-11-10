@@ -36,4 +36,3 @@ Preferably create a new branch
 Make your edits
 Push via a Pull Request here on github
 * Please be sure all tests pass before creating a Pull Request
-
