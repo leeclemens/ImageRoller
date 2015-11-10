@@ -1,0 +1,22 @@
+# Ignore any configs, except the two examples
+config/*
+!config/example_authconfig.conf
+!config/example_config.conf
+
+# pylint script, for now
+run_pylint.py
+
+# pylint log
+imageroller/.pylint_output.log
+
+# Python related cache, etc
+__pycache__/
+*.py[cod]
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+
+# PyCharm project directory
+.idea

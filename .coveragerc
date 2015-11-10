@@ -1,0 +1,9 @@
+# Coverage configuration
+# Usage:
+#   coverage run -m imageroller.test.run
+#   coverage report
+#   coverage html
+
+[run]
+branch = True
+source = imageroller
