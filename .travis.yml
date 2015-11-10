@@ -7,9 +7,9 @@ python:
 install:
   #  Install Python packages / dependencies
   #    coverage
-  - travis_retry pip install coverage
+  # - travis_retry pip install coverage
   #    coveralls
-  - travis_retry pip install coveralls
+  # - travis_retry pip install coveralls
   #    pylint
   - travis_retry pip install pylint
 script:
