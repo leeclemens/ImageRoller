@@ -13,7 +13,7 @@ install:
   #    pylint
   - travis_retry pip install pylint
 script:
-  - $VENV_BIN/pip install .
+  - pip install .
   - pylint imageroller
 matrix:
   fast_finish: true
