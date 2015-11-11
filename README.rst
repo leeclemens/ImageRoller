@@ -11,16 +11,18 @@ A simple backup utility utilizing saved images for Rackspace virtual machines.
 Installation
 ------------
 
+```
 git clone https://github.com/leeclemens/imageroller.git
 cd ImageRoller
 pip install .
-
+```
 
 Usage
 -----
 
+```
 imageroller -c /root/imageroller_config.conf -a /root/imageroller_auth.conf
-
+```
 
 Support
 -------
@@ -32,7 +34,6 @@ Contribute
 ----------
 
 Fork the repo
-Preferably create a new branch
-Make your edits
-Push via a Pull Request here on github
-* Please be sure all tests pass before creating a Pull Request
+Preferably create a new feature branch
+Make your edits and push to your forked repo
+Create a Pull Request
