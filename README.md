@@ -33,7 +33,7 @@ Create an Issue at https://github.com/leeclemens/imageroller/issues
 Contribute
 ----------
 
-Fork the repo
-Preferably create a new feature branch
-Make your edits and push to your forked repo
-Create a Pull Request
+1. Fork the repo
+  * Preferably create a new feature branch
+2. Make your edits and push
+3. Create a Pull Request
