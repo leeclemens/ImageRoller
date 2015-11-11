@@ -96,12 +96,13 @@ class RollerManager(threading.Thread):
             IDENTITY_URL,
             data=get_auth_body_data(),
             headers=imageroller.utils.get_json_content_header())
-        # pylint disable=no-member
+        # pylint: disable=no-member
         self.log.trace("Identity Response: %s", ident_response)
         if ident_response.status_code == requests.codes.ok:
             try:
                 rax_id_data = json.loads(ident_response.content.decode())
                 # Enhance: This logs the Authentication Token
+                # pylint: disable=no-member
                 self.log.trace(
                     "Identity Response JSON: %s",
                     pprint.pformat(rax_id_data) if self.log.isEnabledFor(
