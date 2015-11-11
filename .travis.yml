@@ -4,16 +4,46 @@ language: python
 python:
   - 3.4
   - 3.5
-install:
+  - nightly
+before_install:
   #  Install Python packages / dependencies
   #    coverage
   # - travis_retry pip install coverage
   #    coveralls
   # - travis_retry pip install coveralls
   #    pylint
-  - travis_retry pip install pylint
-script:
+  - pip freeze
+  - travis_retry pip install --upgrade pip
+  - travis_retry pip install --upgrade lazy-object-proxy
+  - travis_retry pip install --upgrade six
+  - travis_retry pip install --upgrade wrapt
+  - pip freeze
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.4' ]]; then travis_retry pip install pylint; fi
+  #      For 3.5, use the latest pylint until it is pushed to PyPI
+  #        https://bitbucket.org/logilab/pylint/issues/643/attributeerror-call-object-has-no
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.5' || $TRAVIS_PYTHON_VERSION == 'nightly' ]]; then cd /tmp && travis_retry hg clone https://bitbucket.org/logilab/astroid && pip install --upgrade astroid/; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.5' || $TRAVIS_PYTHON_VERSION == 'nightly' ]]; then cd /tmp && travis_retry hg clone https://bitbucket.org/logilab/pylint && pip install --upgrade pylint/; fi
+  #    pep8
+  #      only seems to break with nightly (currently 3.6)
+  - if [[ $TRAVIS_PYTHON_VERSION != 'nightly' ]]; then travis_retry pip install pep8; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == 'nightly' ]]; then cd /tmp && git clone https://github.com/PyCQA/pep8.git && pip install pep8/; fi
+  - pip freeze
+install:
+  - cd $TRAVIS_BUILD_DIR
+  - pwd
+  - git status
+  - git branch
   - pip install .
-  - pylint imageroller
+script:
+  - pip freeze
+  - pwd
+  - ls -la
+  #  pep8
+  - pep8 -v .
+  #  pylint
+  #    Only lint 3.4 since it is broken with 3.5 and 3.6
+  - which pylint
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.4' ]]; then pylint --version; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.4' ]]; then pylint imageroller; fi
 matrix:
   fast_finish: true
