@@ -3,11 +3,11 @@ ImageRoller
 
 [![Build Status](https://travis-ci.org/leeclemens/imageroller.svg?branch=master)](https://travis-ci.org/leeclemens/imageroller)
 
-A simple backup utility utilizing saved images for Rackspace virtual machines.
+A simple backup utility utilizing saved images for Rackspace cloud servers.
 
-- Allows for the configuration of multiple servers with varying retention specifications.
+- Allows for the configuration of multiple servers with varying retention specifications
 
-- Can easily be scheduled via crond, etc to maintain a number of images/retention for your Rackspace hosted servers
+- Can easily be scheduled via crond, etc to maintain a number of images/retention for your Rackspace cloud servers
 
 
 Installation
