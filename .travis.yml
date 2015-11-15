@@ -34,6 +34,7 @@ script:
   - pip freeze
   - pwd
   - ls -la
+  - coverage run -m imageroller.test.run
   #  pep8
   - pep8 -v .
   #  pylint
@@ -41,5 +42,7 @@ script:
   - which pylint
   - if [[ $TRAVIS_PYTHON_VERSION == '3.4' ]]; then pylint --version; fi
   - if [[ $TRAVIS_PYTHON_VERSION == '3.4' ]]; then pylint imageroller; fi
+after_success:
+  - coveralls
 matrix:
   fast_finish: true
