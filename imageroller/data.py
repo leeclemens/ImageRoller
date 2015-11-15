@@ -39,7 +39,9 @@ class ConfigData(object):
         :type concurrent_workers: int
         :param concurrent_workers: Number of concurrent workers
         """
-        self._concurrent_workers = concurrent_workers
+        self._concurrent_workers = int(concurrent_workers)
+        if self._concurrent_workers <= 0:
+            raise ValueError("Concurrent workers must be greater than 0")
         self._server_data = collections.OrderedDict()
 
     @property
@@ -59,14 +61,20 @@ class ConfigData(object):
         return self._server_data.values()
 
     @server_data.setter
-    def server_data(self, server_data):
+    def server_data(self, value):
         """Server Data property setter
 
-        :type server_data: ServerData
-        :param server_data: The Server Data to set in the internal dict
+        :type value: ServerData
+        :param value: The Server Data to set in the internal dict
+
+        :raises ValueError if an invalid value is attempted to be set
         """
-        if server_data.enabled:
-            self._server_data[server_data.name] = server_data
+        if hasattr(value, "name") and hasattr(value, "enabled"):
+            if value.enabled:
+                self._server_data[value.name] = value
+        else:
+            raise ValueError("Invalid object set as server data"
+                             " (name and/or enabled attrs missing)")
 
 
 class ServerData(object):

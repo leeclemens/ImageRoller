@@ -3,9 +3,6 @@ config/*
 !config/example_authconfig.conf
 !config/example_config.conf
 
-# pylint script, for now
-run_pylint.py
-
 # pylint log
 imageroller/.pylint_output.log
 

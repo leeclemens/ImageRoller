@@ -6,13 +6,9 @@ python:
   - 3.5
   - nightly
 before_install:
-  #  Install Python packages / dependencies
-  #    coverage
-  # - travis_retry pip install coverage
-  #    coveralls
-  # - travis_retry pip install coveralls
-  #    pylint
   - pip freeze
+  - travis_retry pip install --upgrade coverage
+  - travis_retry pip install --upgrade coveralls
   - travis_retry pip install --upgrade pip
   - travis_retry pip install --upgrade lazy-object-proxy
   - travis_retry pip install --upgrade six
@@ -38,6 +34,7 @@ script:
   - pip freeze
   - pwd
   - ls -la
+  - coverage run -m imageroller.test.run
   #  pep8
   - pep8 -v .
   #  pylint
@@ -45,5 +42,7 @@ script:
   - which pylint
   - if [[ $TRAVIS_PYTHON_VERSION == '3.4' ]]; then pylint --version; fi
   - if [[ $TRAVIS_PYTHON_VERSION == '3.4' ]]; then pylint imageroller; fi
+after_success:
+  - coveralls
 matrix:
   fast_finish: true

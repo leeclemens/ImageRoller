@@ -20,28 +20,38 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Main runner for unittests
+"""Tests for imageroller.utils
 """
 
-import os
-import sys
+import random
+import string
 import unittest
 
+import imageroller.utils
 
-def main_test_func():
-    """Main funtion to perform all unittests
+
+class HeaderTestCase(unittest.TestCase):
+    """Header related tests
     """
-    test_loader = unittest.TestLoader()
-    test_suite = test_loader.discover(
-        os.path.dirname(os.path.realpath(__file__)),
-        pattern="*_test.py",
-        top_level_dir=os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), os.pardir))
-    print("Running {:d} tests".format(test_suite.countTestCases()))
-    test_result = unittest.TextTestRunner().run(test_suite)
-    if len(test_result.errors) > 0 or len(test_result.failures) > 0:
-        sys.exit(1)  # pragma: no cover
 
+    def test_json_content_header(self):
+        """Test JSON Content-Header
+        """
+        self.assertDictEqual(
+            imageroller.utils.get_json_content_header(),
+            {"Content-Type": "application/json"}
+        )
 
-if __name__ == '__main__':
-    main_test_func()
+    def test_auth_token_header(self):
+        """Test Auth Header
+        """
+        fake_token = ''.join(random.SystemRandom().choice(
+            string.digits + string.ascii_lowercase[:6]) for _ in range(32))
+        self.assertDictEqual(
+            imageroller.utils.get_auth_token_header(fake_token),
+            {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "X-Auth-Token": fake_token,
+            }
+        )
