@@ -21,6 +21,9 @@
 # THE SOFTWARE.
 
 
+"""Tests for imageroller.data
+"""
+
 import random
 import unittest
 
@@ -32,6 +35,7 @@ class ConfigDataTestCase(unittest.TestCase):
     """Test imageroller.data.ConfigData
     """
 
+    # pylint: disable=invalid-name
     def test_concurrent_workers_value_invalid(self):
         """Test Concurrent Workers value is invalid
         """
@@ -39,17 +43,20 @@ class ConfigDataTestCase(unittest.TestCase):
         self.assertRaises(ValueError, imageroller.data.ConfigData,
                           "invalid_value")
 
+    # pylint: disable=invalid-name
     def test_concurrent_workers_value_zero(self):
         """Test Concurrent Workers value of 0 is invalid
         """
         self.assertRaises(ValueError, imageroller.data.ConfigData, 0)
 
+    # pylint: disable=invalid-name
     def test_concurrent_workers_value_one(self):
         """Test Concurrent Workers value of of 1 is valid
         """
         config_data = imageroller.data.ConfigData(1)
         self.assertEqual(config_data.concurrent_workers, 1)
 
+    # pylint: disable=invalid-name
     def test_concurrent_workers_value_random(self):
         """Test initializing Concurrent Workers value to a random value
         """
@@ -63,6 +70,8 @@ class ConfigDataTestCase(unittest.TestCase):
         config_data = imageroller.data.ConfigData(3)
 
         def set_concurrent_workers_test():
+            """Function to facilitate unittest setting a property
+            """
             # noinspection PyPropertyAccess
             config_data.concurrent_workers = 3
 
@@ -80,6 +89,8 @@ class ConfigDataTestCase(unittest.TestCase):
         config_data = imageroller.data.ConfigData(1)
 
         def set_server_data(server_data):
+            """Function to facilitate unittest setting a property
+            """
             config_data.server_data = server_data
 
         self.assertRaises(ValueError, set_server_data, dict())
@@ -98,7 +109,8 @@ class ConfigDataTestCase(unittest.TestCase):
     def test_server_data_not_enabled(self):
         """Test setting ServerData not enabled is not added to the server_data
         """
-        # TODO: Create Valid Config object to pass to ServerData()
+        # pylint: disable=fixme
+        # TODO: Bug #267 - Create Valid Config object to pass to ServerData
         # config_data = imageroller.data.ConfigData(1)
         # self.assertEqual(len(config_data.server_data), 0)
         # noinspection PyTypeChecker

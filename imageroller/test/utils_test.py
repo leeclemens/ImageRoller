@@ -20,6 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""Tests for imageroller.utils
+"""
+
 import random
 import string
 import unittest
@@ -28,13 +31,20 @@ import imageroller.utils
 
 
 class HeaderTestCase(unittest.TestCase):
+    """Header related tests
+    """
+
     def test_json_content_header(self):
+        """Test JSON Content-Header
+        """
         self.assertDictEqual(
             imageroller.utils.get_json_content_header(),
             {"Content-Type": "application/json"}
         )
 
     def test_auth_token_header(self):
+        """Test Auth Header
+        """
         fake_token = ''.join(random.SystemRandom().choice(
             string.digits + string.ascii_lowercase[:6]) for _ in range(32))
         self.assertDictEqual(

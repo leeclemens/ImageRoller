@@ -20,12 +20,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""Main runner for unittests
+"""
+
 import os
 import sys
 import unittest
 
 
 def main_test_func():
+    """Main funtion to perform all unittests
+    """
     test_loader = unittest.TestLoader()
     test_suite = test_loader.discover(
         os.path.dirname(os.path.realpath(__file__)),
