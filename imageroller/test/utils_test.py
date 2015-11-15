@@ -28,13 +28,13 @@ import imageroller.utils
 
 
 class HeaderTestCase(unittest.TestCase):
-    def testJsonContentHeader(self):
+    def test_json_content_header(self):
         self.assertDictEqual(
             imageroller.utils.get_json_content_header(),
             {"Content-Type": "application/json"}
         )
 
-    def testAuthHeader(self):
+    def test_auth_token_header(self):
         fake_token = ''.join(random.SystemRandom().choice(
             string.digits + string.ascii_lowercase[:6]) for _ in range(32))
         self.assertDictEqual(

@@ -203,7 +203,8 @@ class-attribute-rgx = ([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
 class-attribute-name-hint = ([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
 
 # Regular expression matching correct method names
-method-rgx = [a-z_][a-z0-9_]{2,30}$
+#method-rgx = [a-z_][a-z0-9_]{2,30}$
+method-rgx = (([a-z_][a-z0-9_]{2,30})|(setUp)|(tearDown))$
 
 # Naming hint for method names
 method-name-hint = [a-z_][a-z0-9_]{2,30}$
