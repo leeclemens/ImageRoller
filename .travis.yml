@@ -6,13 +6,9 @@ python:
   - 3.5
   - nightly
 before_install:
-  #  Install Python packages / dependencies
-  #    coverage
-  # - travis_retry pip install coverage
-  #    coveralls
-  # - travis_retry pip install coveralls
-  #    pylint
   - pip freeze
+  - travis_retry pip install --upgrade coverage
+  - travis_retry pip install --upgrade coveralls
   - travis_retry pip install --upgrade pip
   - travis_retry pip install --upgrade lazy-object-proxy
   - travis_retry pip install --upgrade six
