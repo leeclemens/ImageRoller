@@ -35,6 +35,7 @@ script:
   - pwd
   - ls -la
   - coverage run -m imageroller.test.run
+  - coverage report
   #  pep8
   - pep8 -v .
   #  pylint
