@@ -29,7 +29,7 @@ import unittest
 
 
 def main_test_func():
-    """Main funtion to perform all unittests
+    """Main function to perform all unittests
     """
     test_loader = unittest.TestLoader()
     test_suite = test_loader.discover(
