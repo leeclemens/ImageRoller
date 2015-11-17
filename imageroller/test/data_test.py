@@ -90,6 +90,9 @@ class ConfigDataTestCase(unittest.TestCase):
 
         def set_server_data(server_data):
             """Function to facilitate unittest setting a property
+
+            :type server_data: dict
+            :param server_data: Empty dictionary for test
             """
             config_data.server_data = server_data
 
