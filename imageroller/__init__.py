@@ -52,3 +52,11 @@ class Logger(logging.getLoggerClass()):
 
 
 logging.setLoggerClass(Logger)
+
+
+class ConfigError(AttributeError):
+    """Special exception for configuration problems
+
+    Specifically used to facilitate unittests (previously called sys.exit)
+    """
+    pass
