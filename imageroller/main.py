@@ -37,7 +37,6 @@ CONFIG_REQUIRED_DEFAULT = ["ConcurrentWorkers"]
 CONFIG_REQUIRED_SERVER = [
     "SaveTimeoutMinutes",
     "RetainImageMinutes",
-    "Enabled",
     "Region",
 ]
 
