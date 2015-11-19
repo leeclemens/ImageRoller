@@ -221,6 +221,8 @@ class ReadConfigsTestCase(unittest.TestCase):
         os.remove(cls._auth)
 
     def test_read_valid_configs(self):
+        """Test main call to read_configs() which returns both config and auth
+        """
         args = argparse.Namespace(server=None, force=False)
         with open(self._config) as config_f:
             with open(self._auth) as auth_config_f:
