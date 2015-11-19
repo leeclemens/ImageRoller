@@ -155,6 +155,27 @@ Enabled = True
 Region = {OverrideRegion}
 """
 
+AUTH_DATA = {
+    "ApiUser": "TestRAXUsername",
+    "ApiKey": imageroller.test.generate_api_key()}
+CONFIG_DATA = {
+    "ConcurrentWorkers": random.randint(4, 32),
+    "TestServerFQDN": "test.example.com",
+    "SaveTimeoutMinutes": 60,
+    "RetainImageMinutes": 120,
+    "Region": "DFW",
+    # Overridden values for test_server_override()
+    "OverrideConcurrentWorkers": 3,
+    "OverrideSaveTimeoutMinutes": 20,
+    "OverrideRetainImageMinutes": 45,
+    "OverrideRegion": "IAD",
+    "OverrideNotExistFQDN": "not.exist.example.com",
+    "OverrideWorkersFQDN": "workers.example.com",
+    "OverrideSaveTimeoutFQDN": "save.example.com",
+    "OverrideRetainImageFQDN": "retain.example.time",
+    "OverrideRegionFQDN": "region.example.time",
+}
+
 
 def _mkstemp(conf_type):
     return tempfile.mkstemp(suffix=".conf",
@@ -177,87 +198,41 @@ def _get_parser(path):
         return cfg_parser
 
 
-class AuthConfigTestCase(unittest.TestCase):
-    """Test Case related to reading and parsing the Auth Config
+class ReadConfigsTestCase(unittest.TestCase):
+    """Test Case calling parent function for reading configs
+
+    Specific test cases are handled by more specific test cases
     """
 
     @classmethod
     def setUpClass(cls):
         """Gets temp file paths for our config files
         """
-        cls._no_section = _mkstemp("auth")
-        cls._no_user = _mkstemp("auth")
-        cls._blank_user = _mkstemp("auth")
-        cls._no_key = _mkstemp("auth")
-        cls._blank_key = _mkstemp("auth")
-        cls._valid = _mkstemp("auth")
-        cls._auth_data = {"ApiUser": "SomeTestRAXUsername",
-                          "ApiKey": imageroller.test.generate_api_key()}
-        _write_config(cls._no_section, AUTH_NO_SECTION, cls._auth_data)
-        _write_config(cls._no_user, AUTH_NO_USER, cls._auth_data)
-        _write_config(cls._blank_user, AUTH_BLANK_USER, cls._auth_data)
-        _write_config(cls._no_key, AUTH_NO_KEY, cls._auth_data)
-        _write_config(cls._blank_key, AUTH_BLANK_KEY, cls._auth_data)
-        _write_config(cls._valid, AUTH_VALID, cls._auth_data)
+        cls._config = _mkstemp("config")
+        cls._auth = _mkstemp("auth")
+        _write_config(cls._config, CONFIG_SERVER_VALID_MINIMAL, CONFIG_DATA)
+        _write_config(cls._auth, AUTH_VALID, AUTH_DATA)
 
     @classmethod
     def tearDownClass(cls):
         """Cleans up our test config files
         """
-        os.remove(cls._no_section)
-        os.remove(cls._no_user)
-        os.remove(cls._blank_user)
-        os.remove(cls._no_key)
-        os.remove(cls._blank_key)
-        os.remove(cls._valid)
+        os.remove(cls._config)
+        os.remove(cls._auth)
 
-    def test_no_section(self):
-        """Test auth config with no [AUTH] section
-        """
-        with self.assertRaises(ConfigError) as cm:
-            imageroller.main.read_authconfig(
-                _get_parser(self._no_section))
-        self.assertEqual(str(cm.exception), "AuthConfig must contain [AUTH]")
-
-    def test_no_user(self):
-        """Test auth config with no ApiUser key
-        """
-        with self.assertRaises(ConfigError) as cm:
-            imageroller.main.read_authconfig(
-                _get_parser(self._no_user))
-        self.assertEqual(str(cm.exception), "AuthConfig must contain ApiUser")
-
-    def test_blank_user(self):
-        """Test auth config with a blank user
-        """
-        with self.assertRaises(ConfigError) as cm:
-            imageroller.main.read_authconfig(
-                _get_parser(self._blank_user))
-        self.assertEqual(str(cm.exception), "AuthConfig must contain ApiUser")
-
-    def test_no_key(self):
-        """Test auth config with no ApiKey key
-        """
-        with self.assertRaises(ConfigError) as cm:
-            imageroller.main.read_authconfig(
-                _get_parser(self._no_key))
-        self.assertEqual(str(cm.exception), "AuthConfig must contain ApiKey")
-
-    def test_blank_key(self):
-        """Test auth config with no a blank key
-        """
-        with self.assertRaises(ConfigError) as cm:
-            imageroller.main.read_authconfig(
-                _get_parser(self._blank_key))
-        self.assertEqual(str(cm.exception), "AuthConfig must contain ApiKey")
-
-    def test_valid(self):
-        """Test reading the correct values from a valid auth config
-        """
-        auth_tuple = imageroller.main.read_authconfig(
-            _get_parser(self._valid))
-        self.assertTupleEqual(auth_tuple, (self._auth_data["ApiUser"],
-                                           self._auth_data["ApiKey"]))
+    def test_read_valid_configs(self):
+        args = argparse.Namespace(server=None, force=False)
+        with open(self._config) as config_f:
+            with open(self._auth) as auth_config_f:
+                (config_data, auth_tuple) = imageroller.main.read_configs(
+                    args,
+                    config_f,
+                    auth_config_f)
+                self.assertEqual(config_data.concurrent_workers,
+                                 CONFIG_DATA["ConcurrentWorkers"])
+                self.assertEqual(len(config_data.server_data), 1)
+                self.assertTupleEqual(auth_tuple, (AUTH_DATA["ApiUser"],
+                                                   AUTH_DATA["ApiKey"]))
 
 
 class ServerConfigTestCase(unittest.TestCase):
@@ -277,37 +252,21 @@ class ServerConfigTestCase(unittest.TestCase):
         cls._server_no_region = _mkstemp("config")
         cls._server_valid_minimal = _mkstemp("config")
         cls._server_valid_override = _mkstemp("config")
-        cls._config_data = {
-            "ConcurrentWorkers": random.randint(4, 32),
-            "TestServerFQDN": "test.example.com",
-            "SaveTimeoutMinutes": 60,
-            "RetainImageMinutes": 120,
-            "Region": "DFW",
-            # Overridden values for test_server_override()
-            "OverrideConcurrentWorkers": 3,
-            "OverrideSaveTimeoutMinutes": 20,
-            "OverrideRetainImageMinutes": 45,
-            "OverrideRegion": "IAD",
-            "OverrideNotExistFQDN": "not.exist.example.com",
-            "OverrideWorkersFQDN": "workers.example.com",
-            "OverrideSaveTimeoutFQDN": "save.example.com",
-            "OverrideRetainImageFQDN": "retain.example.time",
-            "OverrideRegionFQDN": "region.example.time",
-        }
-        _write_config(cls._no_default, CONFIG_NO_DEFAULT, cls._config_data)
-        _write_config(cls._no_workers, CONFIG_NO_WORKERS, cls._config_data)
-        _write_config(cls._zero_workers, CONFIG_ZERO_WORKERS, cls._config_data)
-        _write_config(cls._no_server, CONFIG_NO_SERVER, cls._config_data)
+
+        _write_config(cls._no_default, CONFIG_NO_DEFAULT, CONFIG_DATA)
+        _write_config(cls._no_workers, CONFIG_NO_WORKERS, CONFIG_DATA)
+        _write_config(cls._zero_workers, CONFIG_ZERO_WORKERS, CONFIG_DATA)
+        _write_config(cls._no_server, CONFIG_NO_SERVER, CONFIG_DATA)
         _write_config(cls._server_no_save_timeout,
-                      CONFIG_SERVER_NO_SAVE_TIMEOUT, cls._config_data)
+                      CONFIG_SERVER_NO_SAVE_TIMEOUT, CONFIG_DATA)
         _write_config(cls._server_no_retain_image,
-                      CONFIG_SERVER_NO_RETAIN_IMAGE, cls._config_data)
+                      CONFIG_SERVER_NO_RETAIN_IMAGE, CONFIG_DATA)
         _write_config(cls._server_no_region, CONFIG_SERVER_NO_REGION,
-                      cls._config_data)
+                      CONFIG_DATA)
         _write_config(cls._server_valid_minimal, CONFIG_SERVER_VALID_MINIMAL,
-                      cls._config_data)
+                      CONFIG_DATA)
         _write_config(cls._server_valid_override, CONFIG_SERVER_VALID_OVERRIDE,
-                      cls._config_data)
+                      CONFIG_DATA)
 
     @classmethod
     def tearDownClass(cls):
@@ -324,7 +283,7 @@ class ServerConfigTestCase(unittest.TestCase):
         os.remove(cls._server_valid_override)
 
     def setUp(self):
-        # Our test command-line args (may safely be altered per test func)
+        # Our test command-line args (functions may safely alter values)
         self._cmd_args = argparse.Namespace(server=None, force=False)
 
     def test_no_default(self):
@@ -389,7 +348,7 @@ class ServerConfigTestCase(unittest.TestCase):
         self.assertEqual(
             str(cm.exception),
             "Server Config for %s is missing SaveTimeoutMinutes" %
-            self._config_data["TestServerFQDN"])
+            CONFIG_DATA["TestServerFQDN"])
 
     def test_server_no_retain_image(self):
         """Test server config with no RetainImageMinutes
@@ -400,7 +359,7 @@ class ServerConfigTestCase(unittest.TestCase):
         self.assertEqual(
             str(cm.exception),
             "Server Config for %s is missing RetainImageMinutes" %
-            self._config_data["TestServerFQDN"])
+            CONFIG_DATA["TestServerFQDN"])
 
     def test_server_no_region(self):
         """Test server config with no Region
@@ -411,7 +370,7 @@ class ServerConfigTestCase(unittest.TestCase):
         self.assertEqual(
             str(cm.exception),
             "Server Config for %s is missing Region" %
-            self._config_data["TestServerFQDN"])
+            CONFIG_DATA["TestServerFQDN"])
 
     def test_server_valid_minimal(self):
         """Test config with minimal configs
@@ -422,14 +381,14 @@ class ServerConfigTestCase(unittest.TestCase):
             self._cmd_args,
             _get_parser(self._server_valid_minimal))
         self.assertEqual(config_data.concurrent_workers,
-                         self._config_data["ConcurrentWorkers"])
+                         CONFIG_DATA["ConcurrentWorkers"])
         self.assertEqual(len(config_data.server_data), 1)
         # Test minutes -> seconds in property getters
         for server_data in config_data.server_data:
             self.assertEqual(server_data.save_timeout_seconds,
-                             int(self._config_data["SaveTimeoutMinutes"]) * 60)
+                             int(CONFIG_DATA["SaveTimeoutMinutes"]) * 60)
             self.assertEqual(server_data.retain_image_seconds,
-                             int(self._config_data["RetainImageMinutes"]) * 60)
+                             int(CONFIG_DATA["RetainImageMinutes"]) * 60)
             self.assertFalse(server_data.auto_enable)
 
     def test_server_valid_cmdline(self):
@@ -437,43 +396,43 @@ class ServerConfigTestCase(unittest.TestCase):
 
         Also tests auto_enable property being set properly
         """
-        self._cmd_args.server = self._config_data["TestServerFQDN"]
+        self._cmd_args.server = CONFIG_DATA["TestServerFQDN"]
         config_data = imageroller.main.read_config(
             self._cmd_args,
             _get_parser(self._server_valid_minimal))
         for server_data in config_data.server_data:
             self.assertEqual(server_data.save_timeout_seconds,
-                             int(self._config_data["SaveTimeoutMinutes"]) * 60)
+                             int(CONFIG_DATA["SaveTimeoutMinutes"]) * 60)
             self.assertEqual(server_data.retain_image_seconds,
-                             int(self._config_data["RetainImageMinutes"]) * 60)
+                             int(CONFIG_DATA["RetainImageMinutes"]) * 60)
             self.assertTrue(server_data.auto_enable)
 
     def test_server_override(self):
         """Test that config values are overridden properly
         """
         # Sanity check our override values do not overlap
-        self.assertNotEqual(self._config_data["ConcurrentWorkers"],
-                            self._config_data["OverrideConcurrentWorkers"])
-        self.assertNotEqual(self._config_data["SaveTimeoutMinutes"],
-                            self._config_data["OverrideSaveTimeoutMinutes"])
-        self.assertNotEqual(self._config_data["RetainImageMinutes"],
-                            self._config_data["OverrideRetainImageMinutes"])
-        self.assertNotEqual(self._config_data["Region"],
-                            self._config_data["OverrideRegion"])
+        self.assertNotEqual(CONFIG_DATA["ConcurrentWorkers"],
+                            CONFIG_DATA["OverrideConcurrentWorkers"])
+        self.assertNotEqual(CONFIG_DATA["SaveTimeoutMinutes"],
+                            CONFIG_DATA["OverrideSaveTimeoutMinutes"])
+        self.assertNotEqual(CONFIG_DATA["RetainImageMinutes"],
+                            CONFIG_DATA["OverrideRetainImageMinutes"])
+        self.assertNotEqual(CONFIG_DATA["Region"],
+                            CONFIG_DATA["OverrideRegion"])
         config_data = imageroller.main.read_config(
             self._cmd_args,
             _get_parser(self._server_valid_override))
         # Verify default disabled server is not included
         self.assertNotIn(
-            self._config_data["OverrideNotExistFQDN"],
+            CONFIG_DATA["OverrideNotExistFQDN"],
             [server_data.name for server_data in config_data.server_data])
         # Sanity check we have every server's config we expect to have
         self.assertSetEqual(
             set([server_data.name for server_data in config_data.server_data]),
-            {self._config_data["OverrideWorkersFQDN"],
-             self._config_data["OverrideSaveTimeoutFQDN"],
-             self._config_data["OverrideRetainImageFQDN"],
-             self._config_data["OverrideRegionFQDN"]},
+            {CONFIG_DATA["OverrideWorkersFQDN"],
+             CONFIG_DATA["OverrideSaveTimeoutFQDN"],
+             CONFIG_DATA["OverrideRetainImageFQDN"],
+             CONFIG_DATA["OverrideRegionFQDN"]},
         )
         # Smoke test they are all enabled
         self.assertTrue(all([server_data.enabled
@@ -481,28 +440,110 @@ class ServerConfigTestCase(unittest.TestCase):
         # ConcurrentWorkers is required to be set in [DEFAULT] (globally)
         # Smoke test we can't override it in the first enabled server config
         self.assertEqual(config_data.concurrent_workers,
-                         self._config_data["ConcurrentWorkers"])
+                         CONFIG_DATA["ConcurrentWorkers"])
         # Test Save Timeout Minutes was overridden
         self.assertEqual(
-            self._config_data["OverrideSaveTimeoutMinutes"],
+            CONFIG_DATA["OverrideSaveTimeoutMinutes"],
             [server_data.save_timeout_minutes
              for server_data in config_data.server_data
              if server_data.name ==
-             self._config_data["OverrideSaveTimeoutFQDN"]]
+             CONFIG_DATA["OverrideSaveTimeoutFQDN"]]
             [0])
         # Test Retain Image Minutes was overridden
         self.assertEqual(
-            self._config_data["OverrideRetainImageMinutes"],
+            CONFIG_DATA["OverrideRetainImageMinutes"],
             [server_data.retain_image_minutes
              for server_data in config_data.server_data
              if server_data.name ==
-             self._config_data["OverrideRetainImageFQDN"]]
+             CONFIG_DATA["OverrideRetainImageFQDN"]]
             [0])
         # Test Region was overridden
         self.assertEqual(
-            self._config_data["OverrideRegion"],
+            CONFIG_DATA["OverrideRegion"],
             [server_data.region
              for server_data in config_data.server_data
              if server_data.name ==
-             self._config_data["OverrideRegionFQDN"]]
+             CONFIG_DATA["OverrideRegionFQDN"]]
             [0])
+
+
+class AuthConfigTestCase(unittest.TestCase):
+    """Test Case related to reading and parsing the Auth Config
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        """Gets temp file paths for our config files
+        """
+        cls._no_section = _mkstemp("auth")
+        cls._no_user = _mkstemp("auth")
+        cls._blank_user = _mkstemp("auth")
+        cls._no_key = _mkstemp("auth")
+        cls._blank_key = _mkstemp("auth")
+        cls._valid = _mkstemp("auth")
+
+        _write_config(cls._no_section, AUTH_NO_SECTION, AUTH_DATA)
+        _write_config(cls._no_user, AUTH_NO_USER, AUTH_DATA)
+        _write_config(cls._blank_user, AUTH_BLANK_USER, AUTH_DATA)
+        _write_config(cls._no_key, AUTH_NO_KEY, AUTH_DATA)
+        _write_config(cls._blank_key, AUTH_BLANK_KEY, AUTH_DATA)
+        _write_config(cls._valid, AUTH_VALID, AUTH_DATA)
+
+    @classmethod
+    def tearDownClass(cls):
+        """Cleans up our test config files
+        """
+        os.remove(cls._no_section)
+        os.remove(cls._no_user)
+        os.remove(cls._blank_user)
+        os.remove(cls._no_key)
+        os.remove(cls._blank_key)
+        os.remove(cls._valid)
+
+    def test_no_section(self):
+        """Test auth config with no [AUTH] section
+        """
+        with self.assertRaises(ConfigError) as cm:
+            imageroller.main.read_authconfig(
+                _get_parser(self._no_section))
+        self.assertEqual(str(cm.exception), "AuthConfig must contain [AUTH]")
+
+    def test_no_user(self):
+        """Test auth config with no ApiUser key
+        """
+        with self.assertRaises(ConfigError) as cm:
+            imageroller.main.read_authconfig(
+                _get_parser(self._no_user))
+        self.assertEqual(str(cm.exception), "AuthConfig must contain ApiUser")
+
+    def test_blank_user(self):
+        """Test auth config with a blank user
+        """
+        with self.assertRaises(ConfigError) as cm:
+            imageroller.main.read_authconfig(
+                _get_parser(self._blank_user))
+        self.assertEqual(str(cm.exception), "AuthConfig must contain ApiUser")
+
+    def test_no_key(self):
+        """Test auth config with no ApiKey key
+        """
+        with self.assertRaises(ConfigError) as cm:
+            imageroller.main.read_authconfig(
+                _get_parser(self._no_key))
+        self.assertEqual(str(cm.exception), "AuthConfig must contain ApiKey")
+
+    def test_blank_key(self):
+        """Test auth config with no a blank key
+        """
+        with self.assertRaises(ConfigError) as cm:
+            imageroller.main.read_authconfig(
+                _get_parser(self._blank_key))
+        self.assertEqual(str(cm.exception), "AuthConfig must contain ApiKey")
+
+    def test_valid(self):
+        """Test reading the correct values from a valid auth config
+        """
+        auth_tuple = imageroller.main.read_authconfig(
+            _get_parser(self._valid))
+        self.assertTupleEqual(auth_tuple, (AUTH_DATA["ApiUser"],
+                                           AUTH_DATA["ApiKey"]))
