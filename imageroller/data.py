@@ -134,7 +134,8 @@ class ServerData(object):
 
         :return: True if auto-enabled or configured to be enabled
         """
-        return self.auto_enable or self._config.getboolean("enabled")
+        return self.auto_enable or self._config.getboolean("Enabled",
+                                                           fallback=False)
 
     @property
     def region(self):
