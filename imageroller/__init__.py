@@ -45,7 +45,9 @@ class Logger(logging.getLoggerClass()):
         :param args: args passed to _log()
         :param kwargs: kwargs passed to _log()
         """
-        if self.isEnabledFor(Logger.TRACE):
+        # pylint: disable=fixme
+        # TODO: Bug #268: Add logging testing
+        if self.isEnabledFor(Logger.TRACE):  # pragma: no cover
             self._log(Logger.TRACE, msg, args, **kwargs)
 
 
