@@ -32,6 +32,7 @@ import warnings
 
 import imageroller.data
 import imageroller.threads.roller_manager
+from imageroller import ConfigError
 
 CONFIG_REQUIRED_DEFAULT = ["ConcurrentWorkers"]
 CONFIG_REQUIRED_SERVER = [
@@ -59,6 +60,9 @@ def main_func():
                     config_data, auth_tuple = read_configs(
                         args, config_f, auth_config_f)
                     execute(args.log_level, config_data, auth_tuple)
+            except ConfigError as exc_config_error:
+                LOG.error("Configuration error: %s", exc_config_error)
+                sys.exit(1)
             except OSError as exc_authconfig:
                 LOG.error("Failed to open authconfig: %s", args.authconfig)
                 LOG.exception(exc_authconfig)
@@ -98,6 +102,13 @@ def execute(log_level, config_data, auth_tuple):
 
 def read_configs(args, config_f, auth_config_f):
     """Read all of the configs
+
+    :type args: argparse.Namespace
+    :param args: The commandline args
+    :type config_f: io.TextIOWrapper
+    :param config_f: The file object of the config file
+    :type auth_config_f: io.TextIOWrapper
+    :param auth_config_f: The file object of the auth config file
     """
     cfg_parser = configparser.ConfigParser()
     cfg_parser.read_file(config_f)
@@ -110,46 +121,49 @@ def read_configs(args, config_f, auth_config_f):
 
 def read_config(args, cfg_parser):
     """Read and process the server config
+
+    :type args: argparse.Namespace
+    :param args: The commandline args
+    :type cfg_parser: configparser.ConfigParser
+    :param cfg_parser: The ConfigParser for the server config
     """
-    if "DEFAULT" in cfg_parser:
-        for required_key in CONFIG_REQUIRED_DEFAULT:
-            if required_key not in cfg_parser["DEFAULT"]:
-                LOG.error("Config must contain %s", required_key)
-                sys.exit(1)
-        # Initialize our ConfigData object
-        config_data = imageroller.data.ConfigData(
-            cfg_parser["DEFAULT"].getint("ConcurrentWorkers"))
-        if args.server is None:
-            # Iterate all configured servers
-            for server in cfg_parser.sections():
-                for required_key in CONFIG_REQUIRED_SERVER:
-                    if required_key not in cfg_parser[server]:
-                        LOG.error("Server Config for %s is missing %s",
-                                  server, required_key)
-                        sys.exit(1)
-                config_data.server_data = imageroller.data.ServerData(
-                    server, cfg_parser[server], False, args.force)
+    for required_key in CONFIG_REQUIRED_DEFAULT:
+        if required_key not in cfg_parser["DEFAULT"]:
+            raise ConfigError("Config must contain %s" % required_key)
+    # Initialize our ConfigData object
+    config_data = imageroller.data.ConfigData(
+        cfg_parser["DEFAULT"].getint("ConcurrentWorkers"))
+    if args.server:
+        if args.server in cfg_parser:
+            # Server was specified on the command line, only include it
+            # If specified, the server will always be 'enabled'
+            config_data.server_data = imageroller.data.ServerData(
+                args.server, cfg_parser[args.server], True, args.force)
         else:
-            if args.server in cfg_parser:
-                # Server was specified on the command line, only include it
-                # If specified, the server will always be 'enabled'
-                config_data.server_data = imageroller.data.ServerData(
-                    args.server, cfg_parser[args.server], True, args.force)
-            else:
-                LOG.error("The specified server, %s, is not configured",
-                          args.server)
-        # Check that we have at least one configured server
-        if len(config_data.server_data) > 0:
-            return config_data
-        else:
-            LOG.error("You must configure at least one server")
+            raise ConfigError(
+                "The specified server is not configured: %s" % args.server)
     else:
-        LOG.error("Config must contain [DEFAULT]")
-    sys.exit(1)
+        # Iterate all configured servers
+        for server in cfg_parser.sections():
+            for required_key in CONFIG_REQUIRED_SERVER:
+                if required_key not in cfg_parser[server]:
+                    raise ConfigError(
+                        "Server Config for %s is missing %s" % (
+                            server, required_key))
+            config_data.server_data = imageroller.data.ServerData(
+                server, cfg_parser[server], False, args.force)
+    # Check that we have at least one configured server
+    if len(config_data.server_data) > 0:
+        return config_data
+    else:
+        raise ConfigError("You must configure at least one server")
 
 
 def read_authconfig(authcfg_parser):
     """Read and process the auth config
+
+    :type authcfg_parser: configparser.ConfigParser
+    :param authcfg_parser: The ConfigParser for the auth config
     """
     if AUTHCONFIG_SECTION in authcfg_parser:
         if AUTHCONFIG_USER in authcfg_parser[AUTHCONFIG_SECTION] and len(
@@ -159,16 +173,19 @@ def read_authconfig(authcfg_parser):
                 return (authcfg_parser[AUTHCONFIG_SECTION][AUTHCONFIG_USER],
                         authcfg_parser[AUTHCONFIG_SECTION][AUTHCONFIG_KEY])
             else:
-                LOG.error("AuthConfig must contain %s", AUTHCONFIG_KEY)
+                raise ConfigError(
+                    "AuthConfig must contain %s" % AUTHCONFIG_KEY)
         else:
-            LOG.error("AuthConfig must contain %s", AUTHCONFIG_USER)
+            raise ConfigError("AuthConfig must contain %s" % AUTHCONFIG_USER)
     else:
-        LOG.error("AuthConfig must contain [%s]", AUTHCONFIG_SECTION)
-    sys.exit(1)
+        raise ConfigError("AuthConfig must contain [%s]" % AUTHCONFIG_SECTION)
 
 
 def get_args():
-    """Process the arguments
+    """Process and return the arguments from the command line
+
+    :rtype: argparse.Namespace
+    :returns: Parsed args
     """
     parser = argparse.ArgumentParser(
         description='Image Roller - Manages Rackspace Images',

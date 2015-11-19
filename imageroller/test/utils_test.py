@@ -23,10 +23,9 @@
 """Tests for imageroller.utils
 """
 
-import random
-import string
 import unittest
 
+import imageroller.test
 import imageroller.utils
 
 
@@ -45,8 +44,7 @@ class HeaderTestCase(unittest.TestCase):
     def test_auth_token_header(self):
         """Test Auth Header
         """
-        fake_token = ''.join(random.SystemRandom().choice(
-            string.digits + string.ascii_lowercase[:6]) for _ in range(32))
+        fake_token = imageroller.test.generate_api_key()
         self.assertDictEqual(
             imageroller.utils.get_auth_token_header(fake_token),
             {
