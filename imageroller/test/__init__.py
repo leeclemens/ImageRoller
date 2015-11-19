@@ -19,3 +19,16 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+
+"""imageroller.test shared functions
+"""
+
+import random
+import string
+
+
+def generate_api_key():
+    """Generates and returns a random Rackspace-like API Key/token
+    """
+    return ''.join(random.SystemRandom().choice(
+        string.digits + string.ascii_lowercase[:6]) for _ in range(32))
