@@ -73,13 +73,13 @@ def parse_rax_id_data(rax_id_data, region):
     images_url = None
     for catalog in rax_id_data["access"]["serviceCatalog"]:
         if catalog["type"] == "compute":
-            if catalog["name"] == "cloudServersOpenStack":
+            if catalog["name"] == "cloudServersOpenStack":  # pragma: no branch
                 for endpoint in catalog["endpoints"]:
                     if endpoint["region"] == region:
                         servers_url = endpoint["publicURL"]
                         break
-        if catalog["type"] == "image":
-            if catalog["name"] == "cloudImages":
+        elif catalog["type"] == "image":  # pragma: no branch
+            if catalog["name"] == "cloudImages":  # pragma: no branch
                 for endpoint in catalog["endpoints"]:
                     if endpoint["region"] == region:
                         images_url = endpoint["publicURL"]
