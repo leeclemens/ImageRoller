@@ -16,7 +16,7 @@ Installation
 
 ```Shell
 git clone https://github.com/leeclemens/imageroller.git
-cd ImageRoller
+cd imageroller
 pip install .
 ```
 
