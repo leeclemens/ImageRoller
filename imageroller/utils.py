@@ -123,13 +123,16 @@ def get_server_id(server_data, log):
                          servers_response.content))
 
 
-def get_image_name(utcnow):
+def get_image_name(utcnow, name_template=IMAGE_NAME_TEMPLATE):
     """Determines the new image name, based upon the UTC time
 
     :type utcnow: datetime.datetime
     :param utcnow: The starting UTC time
+    :type name_template: str
+    :param name_template: The image name template to use
+     default: IMAGE_NAME_TEMPLATE
     """
-    return utcnow.strftime(IMAGE_NAME_TEMPLATE)
+    return utcnow.strftime(name_template)
 
 
 def process_server(server_data, log):
