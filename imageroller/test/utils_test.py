@@ -26,6 +26,7 @@
 import unittest
 
 import imageroller.test
+import imageroller.test.config_test as config_test
 import imageroller.utils
 
 
@@ -53,3 +54,114 @@ class HeaderTestCase(unittest.TestCase):
                 "X-Auth-Token": fake_token,
             }
         )
+
+
+class ParseRaxIdTestCase(unittest.TestCase):
+    """Rackspace Identity response related tests
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        """Setup a Rackspace-like identity response
+        """
+        cls._servers_url_ord = \
+            "https://ord.servers.api.rackspacecloud.com/v2/1100111"
+        cls._images_url_ord = \
+            "https://ord.images.api.rackspacecloud.com/v2"
+        cls._servers_url_images_missing = \
+            "https://hkg.servers.api.rackspacecloud.com/v2/1100111"
+        cls._images_url_servers_missing = \
+            "https://syd.images.api.rackspacecloud.com/v2"
+
+        cls._test_token = imageroller.test.generate_token()
+
+        cls._identity_response = {
+            'access': {
+                'serviceCatalog':
+                    [
+                        {
+                            'endpoints': [
+                                {
+                                    'publicURL': '{0:s}'.format(
+                                        cls._servers_url_ord),
+                                    'region': 'ORD',
+                                    'tenantId': '1100111',
+                                    'versionId': '2',
+                                    'versionInfo': 'version_info_ord',
+                                    'versionList': 'version_list_ord'},
+                                {
+                                    'publicURL': '{0:s}'.format(
+                                        cls._servers_url_images_missing),
+                                    'region': 'HKG',
+                                    'tenantId': '1100111',
+                                    'versionId': '2',
+                                    'versionInfo': 'version_info_hkg',
+                                    'versionList': 'version_list_hkg'}
+                            ],
+                            'name': 'cloudServersOpenStack',
+                            'type': 'compute'},
+                        {
+                            'endpoints': [
+                                {
+                                    'publicURL': '{0:s}'.format(
+                                        cls._images_url_ord),
+                                    'region': 'ORD',
+                                    'tenantId': '1100111'},
+                                {
+                                    'publicURL': '{0:s}'.format(
+                                        cls._images_url_servers_missing),
+                                    'region': 'SYD',
+                                    'tenantId': '1100111'}
+                            ],
+                            'name': 'cloudImages',
+                            'type': 'image'},
+                    ],
+                'token': {
+                    'RAX-AUTH:authenticatedBy': ['APIKEY'],
+                    'expires': '2015-11-28T16:20:30.222Z',
+                    'id': '{0:s}'.format(cls._test_token),
+                    'tenant': {'id': '1100111', 'name': '1100111'}},
+                'user': {
+                    'RAX-AUTH:defaultRegion': 'ORD',
+                    'id': '{ApiKey}'.format(**config_test.AUTH_DATA),
+                    'name': '{ApiUser}'.format(**config_test.AUTH_DATA),
+                    'roles': [{'description': 'Default Role.', 'id': '2',
+                               'name': 'identity:default'}]}}}
+
+        cls._config_valid = imageroller.test.write_config(
+            "config", config_test.CONFIG_SERVER_VALID_MINIMAL,
+            config_test.CONFIG_DATA)
+        cls._auth = imageroller.test.write_config(
+            "auth", config_test.AUTH_VALID, config_test.AUTH_DATA)
+
+    def test_valid(self):
+        """Test the URLs are correctly parsed
+        """
+        servers_url, images_url = imageroller.utils.parse_rax_id_data(
+            self._identity_response, "ORD")
+        self.assertEqual(self._servers_url_ord, servers_url)
+        self.assertEqual(self._images_url_ord, images_url)
+
+    def test_missing_region(self):
+        """Test that None is returned for both URLs
+        """
+        servers_url, images_url = imageroller.utils.parse_rax_id_data(
+            self._identity_response, "DFW")
+        self.assertIsNone(servers_url)
+        self.assertIsNone(images_url)
+
+    def test_missing_servers_url(self):
+        """Test edge-case where only servers URL is missing
+        """
+        servers_url, images_url = imageroller.utils.parse_rax_id_data(
+            self._identity_response, "SYD")
+        self.assertIsNone(servers_url)
+        self.assertEqual(self._images_url_servers_missing, images_url)
+
+    def test_missing_images_url(self):
+        """Test edge-case where only images URL is missing
+        """
+        servers_url, images_url = imageroller.utils.parse_rax_id_data(
+            self._identity_response, "HKG")
+        self.assertEqual(self._servers_url_images_missing, servers_url)
+        self.assertIsNone(images_url)
