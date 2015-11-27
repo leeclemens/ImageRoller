@@ -23,6 +23,7 @@
 """Tests for imageroller.utils
 """
 
+import datetime
 import unittest
 
 import imageroller.test
@@ -165,3 +166,60 @@ class ParseRaxIdTestCase(unittest.TestCase):
             self._identity_response, "HKG")
         self.assertEqual(self._servers_url_images_missing, servers_url)
         self.assertIsNone(images_url)
+
+
+class ImageNameTestCase(unittest.TestCase):
+    """Image Name related tests
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        """Setup the current time for comparison
+        """
+        cls._utcnow = datetime.datetime.utcnow()
+
+    def check_field(self, parsed_time, field_name, not_set=False):
+        """Helper function to check a datetime.datetime field
+
+        :type parsed_time: datetime.datetime
+        :param parsed_time: The result of strptime on the image name
+        :type field_name: str
+        :param field_name: the datetime.datetime attr to test
+        :type not_set: bool
+        :param not_set: True if the datetime.datetime attr
+            is not expected to be set (tested to be 0),
+          False if should be compared with self._utcnow
+        """
+        self.assertEqual(
+            0 if not_set else getattr(self._utcnow, field_name),
+            getattr(parsed_time, field_name))
+
+    def test_default_template(self):
+        """Test the default template
+        """
+        name_template = imageroller.utils.IMAGE_NAME_TEMPLATE
+        image_name = imageroller.utils.get_image_name(
+            self._utcnow, name_template=name_template)
+        parsed_time = datetime.datetime.strptime(image_name, name_template)
+        self.check_field(parsed_time, 'year')
+        self.check_field(parsed_time, 'month')
+        self.check_field(parsed_time, 'day')
+        self.check_field(parsed_time, 'hour')
+        self.check_field(parsed_time, 'minute')
+        self.check_field(parsed_time, 'second', not_set=True)
+        self.check_field(parsed_time, 'microsecond', not_set=True)
+
+    def test_date_only(self):
+        """Test setting only the date, and using prefix instead of suffix, text
+        """
+        name_template = "foobar-%Y-%m-%d"
+        image_name = imageroller.utils.get_image_name(
+            self._utcnow, name_template=name_template)
+        parsed_time = datetime.datetime.strptime(image_name, name_template)
+        self.check_field(parsed_time, 'year')
+        self.check_field(parsed_time, 'month')
+        self.check_field(parsed_time, 'day')
+        self.check_field(parsed_time, 'hour', not_set=True)
+        self.check_field(parsed_time, 'minute', not_set=True)
+        self.check_field(parsed_time, 'second', not_set=True)
+        self.check_field(parsed_time, 'microsecond', not_set=True)
