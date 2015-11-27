@@ -22,9 +22,10 @@
 
 """imageroller.test shared functions
 """
-
+import configparser
 import random
 import string
+import tempfile
 
 
 def generate_api_key():
@@ -32,3 +33,63 @@ def generate_api_key():
     """
     return ''.join(random.SystemRandom().choice(
         string.digits + string.ascii_lowercase[:6]) for _ in range(32))
+
+
+def generate_token():
+    """Generates and returns a random Rackspace-like Authentication token
+    """
+    return ''.join(random.SystemRandom().choice(
+        string.digits + string.ascii_letters) for _ in range(136))
+
+
+def write_config(conf_type, config_text, args):
+    """Helper function which calls get_config_path() and do_write_config()
+
+    :type conf_type: str
+    :param conf_type: Type of configuration file 'config' or 'auth'
+    :type config_text: str
+    :param config_text: Text to write to the config file
+    :type args: dict
+    :param args: kwargs to format config_text
+    :return: Absolute path to the temp config file
+    """
+    path = get_config_path(conf_type)
+    do_write_config(path, config_text, args)
+    return path
+
+
+def get_config_path(conf_type):
+    """Acquires and returns a standard named temp file
+
+    :type conf_type: str
+    :param conf_type: Type of configuration file 'config' or 'auth'
+    :return: Absolute path to the temp config file
+    """
+    return tempfile.mkstemp(suffix=".conf",
+                            prefix="imageroller_%s_" % conf_type)[1]
+
+
+def do_write_config(config_path, config_text, args):
+    """Helper function to write the test config data
+
+    :type config_path: str
+    :param config_path: Absolute path to the temp config file
+    :type config_text: str
+    :param config_text: Text to write to the config file
+    :type args: dict
+    :param args: kwargs to format config_text
+    """
+    with open(config_path, "w") as config_f:
+        config_f.writelines(config_text.format(**args))
+
+
+def get_config_parser(path):
+    """Helper function to return a ConfigParser
+
+    :type path: str
+    :param path: Absolute path to the temp config file
+    """
+    with open(path) as path_f:
+        cfg_parser = configparser.ConfigParser()
+        cfg_parser.read_file(path_f)
+        return cfg_parser

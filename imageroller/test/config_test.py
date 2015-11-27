@@ -24,10 +24,8 @@
 """
 
 import argparse
-import configparser
 import os
 import random
-import tempfile
 import unittest
 
 import imageroller.main
@@ -177,27 +175,6 @@ CONFIG_DATA = {
 }
 
 
-def _mkstemp(conf_type):
-    return tempfile.mkstemp(suffix=".conf",
-                            prefix="imageroller_%s_" % conf_type)[1]
-
-
-def _write_config(config_path, config_text, args):
-    """Helper function to write the test config data
-    """
-    with open(config_path, "w") as config_f:
-        config_f.writelines(config_text.format(**args))
-
-
-def _get_parser(path):
-    """Helper function to return a ConfigParser
-    """
-    with open(path) as path_f:
-        cfg_parser = configparser.ConfigParser()
-        cfg_parser.read_file(path_f)
-        return cfg_parser
-
-
 class ReadConfigsTestCase(unittest.TestCase):
     """Test Case calling parent function for reading configs
 
@@ -208,10 +185,10 @@ class ReadConfigsTestCase(unittest.TestCase):
     def setUpClass(cls):
         """Gets temp file paths for our config files
         """
-        cls._config = _mkstemp("config")
-        cls._auth = _mkstemp("auth")
-        _write_config(cls._config, CONFIG_SERVER_VALID_MINIMAL, CONFIG_DATA)
-        _write_config(cls._auth, AUTH_VALID, AUTH_DATA)
+        cls._config = imageroller.test.write_config(
+            "config", CONFIG_SERVER_VALID_MINIMAL, CONFIG_DATA)
+        cls._auth = imageroller.test.write_config(
+            "auth", AUTH_VALID, AUTH_DATA)
 
     @classmethod
     def tearDownClass(cls):
@@ -245,30 +222,24 @@ class ServerConfigTestCase(unittest.TestCase):
     def setUpClass(cls):
         """Gets temp file paths for our config files
         """
-        cls._no_default = _mkstemp("config")
-        cls._no_workers = _mkstemp("config")
-        cls._zero_workers = _mkstemp("config")
-        cls._no_server = _mkstemp("config")
-        cls._server_no_save_timeout = _mkstemp("config")
-        cls._server_no_retain_image = _mkstemp("config")
-        cls._server_no_region = _mkstemp("config")
-        cls._server_valid_minimal = _mkstemp("config")
-        cls._server_valid_override = _mkstemp("config")
-
-        _write_config(cls._no_default, CONFIG_NO_DEFAULT, CONFIG_DATA)
-        _write_config(cls._no_workers, CONFIG_NO_WORKERS, CONFIG_DATA)
-        _write_config(cls._zero_workers, CONFIG_ZERO_WORKERS, CONFIG_DATA)
-        _write_config(cls._no_server, CONFIG_NO_SERVER, CONFIG_DATA)
-        _write_config(cls._server_no_save_timeout,
-                      CONFIG_SERVER_NO_SAVE_TIMEOUT, CONFIG_DATA)
-        _write_config(cls._server_no_retain_image,
-                      CONFIG_SERVER_NO_RETAIN_IMAGE, CONFIG_DATA)
-        _write_config(cls._server_no_region, CONFIG_SERVER_NO_REGION,
-                      CONFIG_DATA)
-        _write_config(cls._server_valid_minimal, CONFIG_SERVER_VALID_MINIMAL,
-                      CONFIG_DATA)
-        _write_config(cls._server_valid_override, CONFIG_SERVER_VALID_OVERRIDE,
-                      CONFIG_DATA)
+        cls._no_default = imageroller.test.write_config(
+            "config", CONFIG_NO_DEFAULT, CONFIG_DATA)
+        cls._no_workers = imageroller.test.write_config(
+            "config", CONFIG_NO_WORKERS, CONFIG_DATA)
+        cls._zero_workers = imageroller.test.write_config(
+            "config", CONFIG_ZERO_WORKERS, CONFIG_DATA)
+        cls._no_server = imageroller.test.write_config(
+            "config", CONFIG_NO_SERVER, CONFIG_DATA)
+        cls._server_no_save_timeout = imageroller.test.write_config(
+            "config", CONFIG_SERVER_NO_SAVE_TIMEOUT, CONFIG_DATA)
+        cls._server_no_retain_image = imageroller.test.write_config(
+            "config", CONFIG_SERVER_NO_RETAIN_IMAGE, CONFIG_DATA)
+        cls._server_no_region = imageroller.test.write_config(
+            "config", CONFIG_SERVER_NO_REGION, CONFIG_DATA)
+        cls._server_valid_minimal = imageroller.test.write_config(
+            "config", CONFIG_SERVER_VALID_MINIMAL, CONFIG_DATA)
+        cls._server_valid_override = imageroller.test.write_config(
+            "config", CONFIG_SERVER_VALID_OVERRIDE, CONFIG_DATA)
 
     @classmethod
     def tearDownClass(cls):
@@ -294,8 +265,9 @@ class ServerConfigTestCase(unittest.TestCase):
         Subsequently, the ConcurrentWorkers will not be defined
         """
         with self.assertRaises(ConfigError) as cm:
-            imageroller.main.read_config(self._cmd_args,
-                                         _get_parser(self._no_default))
+            imageroller.main.read_config(
+                self._cmd_args,
+                imageroller.test.get_config_parser(self._no_default))
         # ConcurrentWorkers is the first value that is checked
         self.assertEqual(str(cm.exception),
                          "Config must contain ConcurrentWorkers")
@@ -304,8 +276,9 @@ class ServerConfigTestCase(unittest.TestCase):
         """Test config with no ConcurrentWorkers key
         """
         with self.assertRaises(ConfigError) as cm:
-            imageroller.main.read_config(self._cmd_args,
-                                         _get_parser(self._no_workers))
+            imageroller.main.read_config(
+                self._cmd_args,
+                imageroller.test.get_config_parser(self._no_workers))
         self.assertEqual(str(cm.exception),
                          "Config must contain ConcurrentWorkers")
 
@@ -313,8 +286,9 @@ class ServerConfigTestCase(unittest.TestCase):
         """Test config with ConcurrentWorkers = 0
         """
         with self.assertRaises(ValueError) as cm:
-            imageroller.main.read_config(self._cmd_args,
-                                         _get_parser(self._zero_workers))
+            imageroller.main.read_config(
+                self._cmd_args,
+                imageroller.test.get_config_parser(self._zero_workers))
         self.assertEqual(str(cm.exception),
                          "Concurrent workers must be greater than 0")
 
@@ -322,8 +296,9 @@ class ServerConfigTestCase(unittest.TestCase):
         """Test config with no server sections
         """
         with self.assertRaises(ConfigError) as cm:
-            imageroller.main.read_config(self._cmd_args,
-                                         _get_parser(self._no_server))
+            imageroller.main.read_config(
+                self._cmd_args,
+                imageroller.test.get_config_parser(self._no_server))
         self.assertEqual(str(cm.exception),
                          "You must configure at least one server")
 
@@ -335,8 +310,9 @@ class ServerConfigTestCase(unittest.TestCase):
         invalid_server = "invalid.example.com"
         self._cmd_args.server = invalid_server
         with self.assertRaises(ConfigError) as cm:
-            imageroller.main.read_config(self._cmd_args,
-                                         _get_parser(self._no_server))
+            imageroller.main.read_config(
+                self._cmd_args,
+                imageroller.test.get_config_parser(self._no_server))
         self.assertEqual(
             str(cm.exception),
             "The specified server is not configured: %s" % invalid_server)
@@ -345,8 +321,9 @@ class ServerConfigTestCase(unittest.TestCase):
         """Test server config with no SaveTimeoutMinutes
         """
         with self.assertRaises(ConfigError) as cm:
-            imageroller.main.read_config(self._cmd_args, _get_parser(
-                self._server_no_save_timeout))
+            imageroller.main.read_config(self._cmd_args,
+                                         imageroller.test.get_config_parser(
+                                             self._server_no_save_timeout))
         self.assertEqual(
             str(cm.exception),
             "Server Config for %s is missing SaveTimeoutMinutes" %
@@ -356,8 +333,9 @@ class ServerConfigTestCase(unittest.TestCase):
         """Test server config with no RetainImageMinutes
         """
         with self.assertRaises(ConfigError) as cm:
-            imageroller.main.read_config(self._cmd_args, _get_parser(
-                self._server_no_retain_image))
+            imageroller.main.read_config(self._cmd_args,
+                                         imageroller.test.get_config_parser(
+                                             self._server_no_retain_image))
         self.assertEqual(
             str(cm.exception),
             "Server Config for %s is missing RetainImageMinutes" %
@@ -368,7 +346,8 @@ class ServerConfigTestCase(unittest.TestCase):
         """
         with self.assertRaises(ConfigError) as cm:
             imageroller.main.read_config(self._cmd_args,
-                                         _get_parser(self._server_no_region))
+                                         imageroller.test.get_config_parser(
+                                             self._server_no_region))
         self.assertEqual(
             str(cm.exception),
             "Server Config for %s is missing Region" %
@@ -381,7 +360,7 @@ class ServerConfigTestCase(unittest.TestCase):
         """
         config_data = imageroller.main.read_config(
             self._cmd_args,
-            _get_parser(self._server_valid_minimal))
+            imageroller.test.get_config_parser(self._server_valid_minimal))
         self.assertEqual(config_data.concurrent_workers,
                          CONFIG_DATA["ConcurrentWorkers"])
         self.assertEqual(len(config_data.server_data), 1)
@@ -401,7 +380,7 @@ class ServerConfigTestCase(unittest.TestCase):
         self._cmd_args.server = CONFIG_DATA["TestServerFQDN"]
         config_data = imageroller.main.read_config(
             self._cmd_args,
-            _get_parser(self._server_valid_minimal))
+            imageroller.test.get_config_parser(self._server_valid_minimal))
         for server_data in config_data.server_data:
             self.assertEqual(server_data.save_timeout_seconds,
                              int(CONFIG_DATA["SaveTimeoutMinutes"]) * 60)
@@ -423,7 +402,7 @@ class ServerConfigTestCase(unittest.TestCase):
                             CONFIG_DATA["OverrideRegion"])
         config_data = imageroller.main.read_config(
             self._cmd_args,
-            _get_parser(self._server_valid_override))
+            imageroller.test.get_config_parser(self._server_valid_override))
         # Verify default disabled server is not included
         self.assertNotIn(
             CONFIG_DATA["OverrideNotExistFQDN"],
@@ -477,19 +456,18 @@ class AuthConfigTestCase(unittest.TestCase):
     def setUpClass(cls):
         """Gets temp file paths for our config files
         """
-        cls._no_section = _mkstemp("auth")
-        cls._no_user = _mkstemp("auth")
-        cls._blank_user = _mkstemp("auth")
-        cls._no_key = _mkstemp("auth")
-        cls._blank_key = _mkstemp("auth")
-        cls._valid = _mkstemp("auth")
-
-        _write_config(cls._no_section, AUTH_NO_SECTION, AUTH_DATA)
-        _write_config(cls._no_user, AUTH_NO_USER, AUTH_DATA)
-        _write_config(cls._blank_user, AUTH_BLANK_USER, AUTH_DATA)
-        _write_config(cls._no_key, AUTH_NO_KEY, AUTH_DATA)
-        _write_config(cls._blank_key, AUTH_BLANK_KEY, AUTH_DATA)
-        _write_config(cls._valid, AUTH_VALID, AUTH_DATA)
+        cls._no_section = imageroller.test.write_config(
+            "auth", AUTH_NO_SECTION, AUTH_DATA)
+        cls._no_user = imageroller.test.write_config(
+            "auth", AUTH_NO_USER, AUTH_DATA)
+        cls._blank_user = imageroller.test.write_config(
+            "auth", AUTH_BLANK_USER, AUTH_DATA)
+        cls._no_key = imageroller.test.write_config(
+            "auth", AUTH_NO_KEY, AUTH_DATA)
+        cls._blank_key = imageroller.test.write_config(
+            "auth", AUTH_BLANK_KEY, AUTH_DATA)
+        cls._valid = imageroller.test.write_config(
+            "auth", AUTH_VALID, AUTH_DATA)
 
     @classmethod
     def tearDownClass(cls):
@@ -507,7 +485,7 @@ class AuthConfigTestCase(unittest.TestCase):
         """
         with self.assertRaises(ConfigError) as cm:
             imageroller.main.read_authconfig(
-                _get_parser(self._no_section))
+                imageroller.test.get_config_parser(self._no_section))
         self.assertEqual(str(cm.exception), "AuthConfig must contain [AUTH]")
 
     def test_no_user(self):
@@ -515,7 +493,7 @@ class AuthConfigTestCase(unittest.TestCase):
         """
         with self.assertRaises(ConfigError) as cm:
             imageroller.main.read_authconfig(
-                _get_parser(self._no_user))
+                imageroller.test.get_config_parser(self._no_user))
         self.assertEqual(str(cm.exception), "AuthConfig must contain ApiUser")
 
     def test_blank_user(self):
@@ -523,7 +501,7 @@ class AuthConfigTestCase(unittest.TestCase):
         """
         with self.assertRaises(ConfigError) as cm:
             imageroller.main.read_authconfig(
-                _get_parser(self._blank_user))
+                imageroller.test.get_config_parser(self._blank_user))
         self.assertEqual(str(cm.exception), "AuthConfig must contain ApiUser")
 
     def test_no_key(self):
@@ -531,7 +509,7 @@ class AuthConfigTestCase(unittest.TestCase):
         """
         with self.assertRaises(ConfigError) as cm:
             imageroller.main.read_authconfig(
-                _get_parser(self._no_key))
+                imageroller.test.get_config_parser(self._no_key))
         self.assertEqual(str(cm.exception), "AuthConfig must contain ApiKey")
 
     def test_blank_key(self):
@@ -539,13 +517,13 @@ class AuthConfigTestCase(unittest.TestCase):
         """
         with self.assertRaises(ConfigError) as cm:
             imageroller.main.read_authconfig(
-                _get_parser(self._blank_key))
+                imageroller.test.get_config_parser(self._blank_key))
         self.assertEqual(str(cm.exception), "AuthConfig must contain ApiKey")
 
     def test_valid(self):
         """Test reading the correct values from a valid auth config
         """
         auth_tuple = imageroller.main.read_authconfig(
-            _get_parser(self._valid))
+            imageroller.test.get_config_parser(self._valid))
         self.assertTupleEqual(auth_tuple, (AUTH_DATA["ApiUser"],
                                            AUTH_DATA["ApiKey"]))
