@@ -150,8 +150,8 @@ def read_config(args, cfg_parser):
                     raise ConfigError(
                         "Server Config for %s is missing %s" % (
                             server, required_key))
-            config_data.server_data = imageroller.data.ServerData(
-                server, cfg_parser[server], False, args.force)
+            config_data.server_data = [imageroller.data.ServerData(
+                server, cfg_parser[server], False, args.force)]
     # Check that we have at least one configured server
     if len(config_data.server_data) > 0:
         return config_data
