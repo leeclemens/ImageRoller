@@ -137,8 +137,8 @@ def read_config(args, cfg_parser):
         if args.server in cfg_parser:
             # Server was specified on the command line, only include it
             # If specified, the server will always be 'enabled'
-            config_data.server_data = imageroller.data.ServerData(
-                args.server, cfg_parser[args.server], True, args.force)
+            config_data.server_data = [imageroller.data.ServerData(
+                args.server, cfg_parser[args.server], True, args.force)]
         else:
             raise ConfigError(
                 "The specified server is not configured: %s" % args.server)
