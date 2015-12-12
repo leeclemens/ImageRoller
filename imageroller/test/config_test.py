@@ -365,6 +365,7 @@ class ServerConfigTestCase(unittest.TestCase):
                          CONFIG_DATA["ConcurrentWorkers"])
         self.assertEqual(len(config_data.server_data), 1)
         # Test minutes -> seconds in property getters
+        # pylint: disable=not-an-iterable
         for server_data in config_data.server_data:
             self.assertEqual(server_data.save_timeout_seconds,
                              int(CONFIG_DATA["SaveTimeoutMinutes"]) * 60)
@@ -381,6 +382,7 @@ class ServerConfigTestCase(unittest.TestCase):
         config_data = imageroller.main.read_config(
             self._cmd_args,
             imageroller.test.get_config_parser(self._server_valid_minimal))
+        # pylint: disable=not-an-iterable
         for server_data in config_data.server_data:
             self.assertEqual(server_data.save_timeout_seconds,
                              int(CONFIG_DATA["SaveTimeoutMinutes"]) * 60)
@@ -388,6 +390,7 @@ class ServerConfigTestCase(unittest.TestCase):
                              int(CONFIG_DATA["RetainImageMinutes"]) * 60)
             self.assertTrue(server_data.auto_enable)
 
+    # pylint: disable=not-an-iterable
     def test_server_override(self):
         """Test that config values are overridden properly
         """

@@ -56,6 +56,7 @@ class ConfigData(object):
     def server_data(self):
         """Server Data property
 
+        :rtype list
         :return: The values from the internal Server Data dict
         """
         return self._server_data.values()
