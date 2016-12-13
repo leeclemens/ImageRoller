@@ -72,18 +72,10 @@ def parse_rax_id_data(rax_id_data, region):
     servers_url = None
     images_url = None
     for catalog in rax_id_data["access"]["serviceCatalog"]:
-        if catalog["type"] == "compute":
-            if catalog["name"] == "cloudServersOpenStack":  # pragma: no branch
-                for endpoint in catalog["endpoints"]:
-                    if endpoint["region"] == region:
-                        servers_url = endpoint["publicURL"]
-                        break
-        elif catalog["type"] == "image":  # pragma: no branch
-            if catalog["name"] == "cloudImages":  # pragma: no branch
-                for endpoint in catalog["endpoints"]:
-                    if endpoint["region"] == region:
-                        images_url = endpoint["publicURL"]
-                        break
+        servers_url = _lookup_public_url(
+            catalog, "compute", "cloudServersOpenStack", region, servers_url)
+        images_url = _lookup_public_url(
+            catalog, "image", "cloudImages", region, images_url)
     return servers_url, images_url
 
 
@@ -338,3 +330,21 @@ def _needs_image(utcnow, server_data, images, log):
             return False
     log.debug("No active images within retention")
     return True
+
+
+def _lookup_public_url(catalog, cat_type, cat_name, region, previous_url):
+    """Parse to catalog and return the appropriate publicURL value
+        Falls back to returning the previous_url
+         so a value is not overridden while looping
+    :param catalog: The catalog dictionary
+    :param cat_type: The catalog's type key value
+    :param cat_name: The catalog's name key value
+    :param region: The endpoint's region key value
+    :param previous_url: The current value for the publicURL
+    :return: The publicURL value, or the previous_url if none was found
+    """
+    if catalog["type"] == cat_type and catalog["name"] == cat_name:
+        for endpoint in catalog["endpoints"]:
+            if endpoint["region"] == region:
+                return endpoint["publicURL"]
+    return previous_url
