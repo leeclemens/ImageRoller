@@ -166,10 +166,8 @@ def read_authconfig(authcfg_parser):
     :param authcfg_parser: The ConfigParser for the auth config
     """
     if AUTHCONFIG_SECTION in authcfg_parser:
-        if AUTHCONFIG_USER in authcfg_parser[AUTHCONFIG_SECTION] and len(
-                authcfg_parser[AUTHCONFIG_SECTION][AUTHCONFIG_USER]) > 0:
-            if AUTHCONFIG_KEY in authcfg_parser[AUTHCONFIG_SECTION] and len(
-                    authcfg_parser[AUTHCONFIG_SECTION][AUTHCONFIG_KEY]) > 0:
+        if _has_auth_config(AUTHCONFIG_USER, authcfg_parser):
+            if _has_auth_config(AUTHCONFIG_KEY, authcfg_parser):
                 return (authcfg_parser[AUTHCONFIG_SECTION][AUTHCONFIG_USER],
                         authcfg_parser[AUTHCONFIG_SECTION][AUTHCONFIG_KEY])
             else:
@@ -256,6 +254,17 @@ def format_logger(level):
     # Called after command-line and config reading is done
     _config_logger("%(asctime)s %(name)-56s: %(levelname)-6s: %(message)s",
                    sys.stdout, level)
+
+
+def _has_auth_config(auth_config_key, authcfg_parser):
+    """Check that auth_config_key is set and has at least one element
+
+    :param auth_config_key: AUTHCONFIG_USER or AUTHCONFIG_KEY to check
+    :param authcfg_parser: The authcfg_parser
+    :return: True if auth_config_key exists and has at least one element
+    """
+    return auth_config_key in authcfg_parser[AUTHCONFIG_SECTION] and len(
+        authcfg_parser[AUTHCONFIG_SECTION][auth_config_key]) > 0
 
 
 def _config_logger(log_format, stream, level):
