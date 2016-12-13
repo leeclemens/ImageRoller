@@ -441,7 +441,7 @@ class ServerConfigTestCase(unittest.TestCase):
         self.assertEqual(config_data.concurrent_workers,
                          CONFIG_DATA["ConcurrentWorkers"])
 
-    # pylint: disable=not-an-iterable
+    # pylint: disable=not-an-iterable, invalid-name
     def test_server_override_save_timeout(self):
         """Test that config values are overridden properly
         """
