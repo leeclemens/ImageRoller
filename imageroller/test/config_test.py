@@ -436,11 +436,6 @@ class ServerConfigTestCase(unittest.TestCase):
         config_data = imageroller.main.read_config(
             self._cmd_args,
             imageroller.test.get_config_parser(self._server_valid_override))
-        # Sanity check we have every server's config we expect to have
-        self.assertSetEqual(
-            set([server_data.name for server_data in config_data.server_data]),
-            {CONFIG_DATA["OverrideWorkersFQDN"]},
-        )
         # ConcurrentWorkers is required to be set in [DEFAULT] (globally)
         # Smoke test we can't override it in the first enabled server config
         self.assertEqual(config_data.concurrent_workers,
@@ -456,11 +451,6 @@ class ServerConfigTestCase(unittest.TestCase):
         config_data = imageroller.main.read_config(
             self._cmd_args,
             imageroller.test.get_config_parser(self._server_valid_override))
-        # Sanity check we have every server's config we expect to have
-        self.assertSetEqual(
-            set([server_data.name for server_data in config_data.server_data]),
-            {CONFIG_DATA["OverrideSaveTimeoutFQDN"]},
-        )
         # Test Save Timeout Minutes was overridden
         self.assertEqual(
             CONFIG_DATA["OverrideSaveTimeoutMinutes"],
@@ -481,12 +471,6 @@ class ServerConfigTestCase(unittest.TestCase):
             self._cmd_args,
             imageroller.test.get_config_parser(
                 self._server_valid_override))
-        # Sanity check we have every server's config we expect to have
-        self.assertSetEqual(
-            set([server_data.name for server_data in
-                 config_data.server_data]),
-            {CONFIG_DATA["OverrideRetainImageFQDN"]},
-        )
         # Test Retain Image Minutes was overridden
         self.assertEqual(
             CONFIG_DATA["OverrideRetainImageMinutes"],
@@ -507,12 +491,6 @@ class ServerConfigTestCase(unittest.TestCase):
             self._cmd_args,
             imageroller.test.get_config_parser(
                 self._server_valid_override))
-        # Sanity check we have every server's config we expect to have
-        self.assertSetEqual(
-            set([server_data.name for server_data in
-                 config_data.server_data]),
-            {CONFIG_DATA["OverrideRegionFQDN"]},
-        )
         # Test Region was overridden
         self.assertEqual(
             CONFIG_DATA["OverrideRegion"],
