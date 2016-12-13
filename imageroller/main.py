@@ -137,29 +137,37 @@ def read_config(args, cfg_parser):
     config_data = imageroller.data.ConfigData(
         cfg_parser["DEFAULT"].getint("ConcurrentWorkers"))
     if args.server:
-        if args.server in cfg_parser:
-            # Server was specified on the command line, only include it
-            # If specified, the server will always be 'enabled'
-            config_data.server_data = imageroller.data.ServerData(
-                args.server, cfg_parser[args.server], True, args.force)
-        else:
-            raise ConfigError(
-                "The specified server is not configured: %s" % args.server)
+        _read_config_server(args, cfg_parser, config_data)
     else:
-        # Iterate all configured servers
-        for server in cfg_parser.sections():
-            for required_key in CONFIG_REQUIRED_SERVER:
-                if required_key not in cfg_parser[server]:
-                    raise ConfigError(
-                        "Server Config for %s is missing %s" % (
-                            server, required_key))
-            config_data.server_data = imageroller.data.ServerData(
-                server, cfg_parser[server], False, args.force)
+        _read_config_all(args, cfg_parser, config_data)
     # Check that we have at least one configured server
     if len(config_data.server_data) > 0:
         return config_data
     else:
         raise ConfigError("You must configure at least one server")
+
+
+def _read_config_server(args, cfg_parser, config_data):
+    if args.server in cfg_parser:
+        # Server was specified on the command line, only include it
+        # If specified, the server will always be 'enabled'
+        config_data.server_data = imageroller.data.ServerData(
+            args.server, cfg_parser[args.server], True, args.force)
+    else:
+        raise ConfigError(
+            "The specified server is not configured: %s" % args.server)
+
+
+def _read_config_all(args, cfg_parser, config_data):
+    # Iterate all configured servers
+    for server in cfg_parser.sections():
+        for required_key in CONFIG_REQUIRED_SERVER:
+            if required_key not in cfg_parser[server]:
+                raise ConfigError(
+                    "Server Config for %s is missing %s" % (
+                        server, required_key))
+        config_data.server_data = imageroller.data.ServerData(
+            server, cfg_parser[server], False, args.force)
 
 
 def read_authconfig(authcfg_parser):
