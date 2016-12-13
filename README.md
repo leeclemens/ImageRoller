@@ -6,7 +6,7 @@ ImageRoller
 [![Code Climate](https://codeclimate.com/github/leeclemens/imageroller/badges/gpa.svg)](https://codeclimate.com/github/leeclemens/imageroller)
 [![Issue Count](https://codeclimate.com/github/leeclemens/imageroller/badges/issue_count.svg)](https://codeclimate.com/github/leeclemens/imageroller)
 
-A simple to manage saved images of Rackspace cloud servers.
+A simple utility to manage saved images of Rackspace cloud servers.
 
 - Allows for the configuration of multiple servers with varying retention specifications
 
