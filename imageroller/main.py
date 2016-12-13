@@ -64,13 +64,16 @@ def main_func():
                 LOG.error("Configuration error: %s", exc_config_error)
                 sys.exit(1)
             except OSError as exc_authconfig:
-                LOG.error("Failed to open authconfig: %s", args.authconfig)
-                LOG.exception(exc_authconfig)
-                sys.exit(1)
+                _exit_config_oserror("authconfig", args.authconfig,
+                                     exc_authconfig)
     except OSError as exc_config:
-        LOG.error("Failed to open config: %s", args.config)
-        LOG.exception(exc_config)
-        sys.exit(1)
+        _exit_config_oserror("config", args.config, exc_config)
+
+
+def _exit_config_oserror(config_name, config_file, exc):
+    LOG.error("Failed to open %s: %s", config_name, config_file)
+    LOG.exception(exc)
+    sys.exit(1)
 
 
 def execute(log_level, config_data, auth_tuple):
