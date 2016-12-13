@@ -97,9 +97,7 @@ def get_server_id(server_data, log):
     if servers_response.status_code == requests.codes.ok:
         try:
             servers = json.loads(servers_response.content.decode())
-            log.trace("Servers Response JSON: %s",
-                      pprint.pformat(servers) if log.isEnabledFor(
-                          imageroller.Logger.TRACE) else "")
+            _trace_json("Servers Response JSON", servers, log)
             for server in servers["servers"]:
                 log.debug("Server: %s", server)
                 if server["name"].lower() == server_data.name:
@@ -179,9 +177,7 @@ def _get_images(server_data, log):
     if images_response.status_code == requests.codes.ok:
         try:
             images = json.loads(images_response.content.decode())
-            log.trace("Images Response JSON: %s",
-                      pprint.pformat(images) if log.isEnabledFor(
-                          imageroller.Logger.TRACE) else "")
+            _trace_json("Images Response JSON", images, log)
             images_data = []
             for image in images["images"]:
                 image_data = imageroller.data.ImageData(server_data.name,
@@ -348,3 +344,10 @@ def _lookup_public_url(catalog, cat_type, cat_name, region, previous_url):
             if endpoint["region"] == region:
                 return endpoint["publicURL"]
     return previous_url
+
+
+def _trace_json(message, json_data, log):
+    log.trace("%s: %s",
+              message,
+              pprint.pformat(json_data) if log.isEnabledFor(
+                  imageroller.Logger.TRACE) else "")
