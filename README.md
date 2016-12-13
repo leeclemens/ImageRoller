@@ -3,6 +3,8 @@ ImageRoller
 
 [![Build Status](https://travis-ci.org/leeclemens/imageroller.svg?branch=master)](https://travis-ci.org/leeclemens/imageroller)
 [![Coverage Status](https://coveralls.io/repos/leeclemens/imageroller/badge.svg?branch=master&service=github)](https://coveralls.io/github/leeclemens/imageroller?branch=master)
+[![Code Climate](https://codeclimate.com/github/leeclemens/imageroller/badges/gpa.svg)](https://codeclimate.com/github/leeclemens/imageroller)
+[![Issue Count](https://codeclimate.com/github/leeclemens/imageroller/badges/issue_count.svg)](https://codeclimate.com/github/leeclemens/imageroller)
 
 A simple backup utility utilizing saved images for Rackspace cloud servers.
 
