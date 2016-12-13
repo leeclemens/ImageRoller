@@ -137,8 +137,10 @@ def read_config(args, cfg_parser):
     config_data = imageroller.data.ConfigData(
         cfg_parser["DEFAULT"].getint("ConcurrentWorkers"))
     if args.server:
+        # noinspection PyTypeChecker
         _read_config_server(args, cfg_parser, config_data)
     else:
+        # noinspection PyTypeChecker
         _read_config_all(args, cfg_parser, config_data)
     # Check that we have at least one configured server
     if len(config_data.server_data) > 0:
