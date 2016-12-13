@@ -391,7 +391,7 @@ class ServerConfigTestCase(unittest.TestCase):
             self.assertTrue(server_data.auto_enable)
 
     # pylint: disable=not-an-iterable
-    def test_server_override(self):
+    def test_server_override_general(self):
         """Test that config values are overridden properly
         """
         # Sanity check our override values do not overlap
@@ -405,14 +405,17 @@ class ServerConfigTestCase(unittest.TestCase):
                             CONFIG_DATA["OverrideRegion"])
         config_data = imageroller.main.read_config(
             self._cmd_args,
-            imageroller.test.get_config_parser(self._server_valid_override))
+            imageroller.test.get_config_parser(
+                self._server_valid_override))
         # Verify default disabled server is not included
         self.assertNotIn(
             CONFIG_DATA["OverrideNotExistFQDN"],
-            [server_data.name for server_data in config_data.server_data])
+            [server_data.name for server_data in
+             config_data.server_data])
         # Sanity check we have every server's config we expect to have
         self.assertSetEqual(
-            set([server_data.name for server_data in config_data.server_data]),
+            set([server_data.name for server_data in
+                 config_data.server_data]),
             {CONFIG_DATA["OverrideWorkersFQDN"],
              CONFIG_DATA["OverrideSaveTimeoutFQDN"],
              CONFIG_DATA["OverrideRetainImageFQDN"],
@@ -420,11 +423,44 @@ class ServerConfigTestCase(unittest.TestCase):
         )
         # Smoke test they are all enabled
         self.assertTrue(all([server_data.enabled
-                             for server_data in config_data.server_data]))
+                             for server_data in
+                             config_data.server_data]))
+
+    # pylint: disable=not-an-iterable
+    def test_server_override_workers(self):
+        """Test that config values are overridden properly
+        """
+        # Sanity check our override values do not overlap
+        self.assertNotEqual(CONFIG_DATA["ConcurrentWorkers"],
+                            CONFIG_DATA["OverrideConcurrentWorkers"])
+        config_data = imageroller.main.read_config(
+            self._cmd_args,
+            imageroller.test.get_config_parser(self._server_valid_override))
+        # Sanity check we have every server's config we expect to have
+        self.assertSetEqual(
+            set([server_data.name for server_data in config_data.server_data]),
+            {CONFIG_DATA["OverrideWorkersFQDN"]},
+        )
         # ConcurrentWorkers is required to be set in [DEFAULT] (globally)
         # Smoke test we can't override it in the first enabled server config
         self.assertEqual(config_data.concurrent_workers,
                          CONFIG_DATA["ConcurrentWorkers"])
+
+    # pylint: disable=not-an-iterable
+    def test_server_override_save_timeout(self):
+        """Test that config values are overridden properly
+        """
+        # Sanity check our override values do not overlap
+        self.assertNotEqual(CONFIG_DATA["SaveTimeoutMinutes"],
+                            CONFIG_DATA["OverrideSaveTimeoutMinutes"])
+        config_data = imageroller.main.read_config(
+            self._cmd_args,
+            imageroller.test.get_config_parser(self._server_valid_override))
+        # Sanity check we have every server's config we expect to have
+        self.assertSetEqual(
+            set([server_data.name for server_data in config_data.server_data]),
+            {CONFIG_DATA["OverrideSaveTimeoutFQDN"]},
+        )
         # Test Save Timeout Minutes was overridden
         self.assertEqual(
             CONFIG_DATA["OverrideSaveTimeoutMinutes"],
@@ -433,6 +469,24 @@ class ServerConfigTestCase(unittest.TestCase):
              if server_data.name ==
              CONFIG_DATA["OverrideSaveTimeoutFQDN"]]
             [0])
+
+    # pylint: disable=not-an-iterable
+    def test_server_override_retain(self):
+        """Test that config values are overridden properly
+        """
+        # Sanity check our override values do not overlap
+        self.assertNotEqual(CONFIG_DATA["RetainImageMinutes"],
+                            CONFIG_DATA["OverrideRetainImageMinutes"])
+        config_data = imageroller.main.read_config(
+            self._cmd_args,
+            imageroller.test.get_config_parser(
+                self._server_valid_override))
+        # Sanity check we have every server's config we expect to have
+        self.assertSetEqual(
+            set([server_data.name for server_data in
+                 config_data.server_data]),
+            {CONFIG_DATA["OverrideRetainImageFQDN"]},
+        )
         # Test Retain Image Minutes was overridden
         self.assertEqual(
             CONFIG_DATA["OverrideRetainImageMinutes"],
@@ -441,6 +495,24 @@ class ServerConfigTestCase(unittest.TestCase):
              if server_data.name ==
              CONFIG_DATA["OverrideRetainImageFQDN"]]
             [0])
+
+    # pylint: disable=not-an-iterable
+    def test_server_override_region(self):
+        """Test that config values are overridden properly
+        """
+        # Sanity check our override values do not overlap
+        self.assertNotEqual(CONFIG_DATA["Region"],
+                            CONFIG_DATA["OverrideRegion"])
+        config_data = imageroller.main.read_config(
+            self._cmd_args,
+            imageroller.test.get_config_parser(
+                self._server_valid_override))
+        # Sanity check we have every server's config we expect to have
+        self.assertSetEqual(
+            set([server_data.name for server_data in
+                 config_data.server_data]),
+            {CONFIG_DATA["OverrideRegionFQDN"]},
+        )
         # Test Region was overridden
         self.assertEqual(
             CONFIG_DATA["OverrideRegion"],
