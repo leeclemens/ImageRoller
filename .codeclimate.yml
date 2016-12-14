@@ -8,6 +8,8 @@ engines:
       - python
   fixme:
     enabled: true
+    exclude_paths:
+    - pylintrc
   radon:
     enabled: true
 ratings:
