@@ -55,19 +55,28 @@ def main_func():
     args = get_args()
     try:
         with open(args.config, "r") as config_f:
-            try:
-                with open(args.authconfig, "r") as auth_config_f:
-                    config_data, auth_tuple = read_configs(
-                        args, config_f, auth_config_f)
-                    execute(args.log_level, config_data, auth_tuple)
-            except ConfigError as exc_config_error:
-                LOG.error("Configuration error: %s", exc_config_error)
-                sys.exit(1)
-            except OSError as exc_authconfig:
-                _exit_config_oserror("authconfig", args.authconfig,
-                                     exc_authconfig)
+            # noinspection PyTypeChecker
+            _main_with_config(args, config_f)
     except OSError as exc_config:
         _exit_config_oserror("config", args.config, exc_config)
+
+
+def _main_with_config(args, config_f):
+    try:
+        with open(args.authconfig, "r") as auth_config_f:
+            _main_execute(args, config_f, auth_config_f)
+    except ConfigError as exc_config_error:
+        LOG.error("Configuration error: %s", exc_config_error)
+        sys.exit(1)
+    except OSError as exc_authconfig:
+        _exit_config_oserror("authconfig", args.authconfig,
+                             exc_authconfig)
+
+
+def _main_execute(args, config_f, auth_config_f):
+    config_data, auth_tuple = read_configs(
+        args, config_f, auth_config_f)
+    execute(args.log_level, config_data, auth_tuple)
 
 
 def _exit_config_oserror(config_name, config_file, exc):
