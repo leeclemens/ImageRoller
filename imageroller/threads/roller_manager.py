@@ -37,8 +37,6 @@ import imageroller.data
 import imageroller.threads.roller
 import imageroller.utils
 
-IDENTITY_URL = "https://identity.api.rackspacecloud.com/v2.0/tokens"
-
 
 class RollerManager(threading.Thread):
     """Manager Thread for processing all of the configured servers
@@ -69,33 +67,17 @@ class RollerManager(threading.Thread):
         :type auth_data: tuple
         :param auth_data: Auth data tuple of (username, API key)
         """
-
-        def get_auth_body_data(hide_key=False):
-            """Private function for returning the API key in the header data
-
-            :type hide_key: bool
-            :param hide_key: True to obfuscate the API key (for logging)
-            """
-            return json.dumps({
-                "auth": {
-                    "RAX-KSKEY:apiKeyCredentials": {
-                        "username": auth_data[0],
-                        "apiKey": "HIDDEN_KEY" if hide_key else auth_data[1]}}
-            })
-
         # pylint: disable=no-member
         self.log.trace("Identity Request: %s data=%s headers=%s",
-                       IDENTITY_URL,
-                       get_auth_body_data(hide_key=True)
+                       imageroller.utils.IDENTITY_URL,
+                       imageroller.utils.get_auth_body_data(auth_data,
+                                                            hide_key=True)
                        if self.log.isEnabledFor(
                            imageroller.Logger.TRACE) else "",
                        imageroller.utils.get_json_content_header()
                        if self.log.isEnabledFor(
                            imageroller.Logger.TRACE) else "")
-        ident_response = requests.post(
-            IDENTITY_URL,
-            data=get_auth_body_data(),
-            headers=imageroller.utils.get_json_content_header())
+        ident_response = imageroller.utils.get_identity_response(auth_data)
         # pylint: disable=no-member
         self.log.trace("Identity Response: %s", ident_response)
         if ident_response.status_code == requests.codes.ok:

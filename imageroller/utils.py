@@ -37,6 +37,8 @@ IMAGE_NAME_TEMPLATE = "%Y-%m-%d_%H-%M_imageroller"
 
 JSON_MIME_TYPE = "application/json"
 
+IDENTITY_URL = "https://identity.api.rackspacecloud.com/v2.0/tokens"
+
 
 def get_json_content_header():
     """Returns the Content-Type, for use in the HTTP request header
@@ -57,6 +59,34 @@ def get_auth_token_header(token):
         "X-Auth-Token": str(token)
     })
     return header
+
+
+def get_auth_body_data(auth_data, hide_key=False):
+    """Private function for returning the API key in the header data
+
+    :type auth_data: tuple
+    :param auth_data: Auth data tuple of (username, API key)
+    :type hide_key: bool
+    :param hide_key: True to obfuscate the API key (for logging)
+    """
+    return json.dumps({
+        "auth": {
+            "RAX-KSKEY:apiKeyCredentials": {
+                "username": auth_data[0],
+                "apiKey": "HIDDEN_KEY" if hide_key else auth_data[1]}}
+    })
+
+
+def get_identity_response(auth_data):
+    """Function for returned the raw response from the IDENTITY_URL
+
+    :param auth_data:
+    :return:
+    """
+    return requests.post(
+        IDENTITY_URL,
+        data=get_auth_body_data(auth_data),
+        headers=get_json_content_header())
 
 
 def parse_rax_id_data(rax_id_data, region):
@@ -134,7 +164,7 @@ def process_server(server_data, log):
     :param log: The logger instance
     """
     utcnow = datetime.datetime.utcnow()
-    images = _get_images(server_data, log)
+    images = get_images(server_data, log)
     if _is_any_in_progress(images, log):
         if _is_timed_out(utcnow, server_data, images, log):
             # Enhance: We can't delete it, but should we create a new one?
@@ -156,7 +186,7 @@ def process_server(server_data, log):
             _delete_expired_images(utcnow, server_data, images, log)
 
 
-def _get_images(server_data, log):
+def get_images(server_data, log):
     """Get the Image data for the server
 
     :type server_data: imageroller.data.ServerData

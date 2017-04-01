@@ -24,9 +24,10 @@
 """
 
 import collections
+import configparser
 import datetime
 
-RAX_DATE_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+RAX_DATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 
 
 class ConfigData(object):
@@ -41,7 +42,7 @@ class ConfigData(object):
         """
         self._concurrent_workers = int(concurrent_workers)
         if self._concurrent_workers <= 0:
-            raise ValueError("Concurrent workers must be greater than 0")
+            raise ValueError('Concurrent workers must be greater than 0')
         self._server_data = collections.OrderedDict()
 
     @property
@@ -70,12 +71,12 @@ class ConfigData(object):
 
         :raises ValueError if an invalid value is attempted to be set
         """
-        if hasattr(value, "name") and hasattr(value, "enabled"):
+        if hasattr(value, 'name') and hasattr(value, 'enabled'):
             if value.enabled:
                 self._server_data[value.name] = value
         else:
-            raise ValueError("Invalid object set as server data"
-                             " (name and/or enabled attrs missing)")
+            raise ValueError('Invalid object set as server data'
+                             ' (name and/or enabled attrs missing)')
 
 
 class ServerData(object):
@@ -91,8 +92,8 @@ class ServerData(object):
 
         :type name: str
         :param name: The server's FQDN
-        :type config: configparser.SectionProxy
-        :param config: The server's configparser object
+        :type config: configparser.SectionProxy or dict
+        :param config: The server's configparser object or dict
         :type auto_enable: bool
         :param auto_enable: True if the server was specified on command-line
         :type force: bool
@@ -104,6 +105,10 @@ class ServerData(object):
         self._force = force
         # server_id, token, servers_url, images_url
         self._identity_info = [None, None, None, None]
+
+    def __str__(self):
+        return '%s  Region: %s  AutoEnable: %s  Force: %s' % (
+            self.name, self.region, self.auto_enable, self.force)
 
     @property
     def name(self):
@@ -135,8 +140,14 @@ class ServerData(object):
 
         :return: True if auto-enabled or configured to be enabled
         """
-        return self.auto_enable or self._config.getboolean("Enabled",
-                                                           fallback=False)
+        if self.auto_enable:
+            return self.auto_enable
+        else:
+            if isinstance(self._config, configparser.SectionProxy):
+                return self._config.getboolean('Enabled',
+                                               fallback=False)
+            else:
+                return self._config['Enabled']
 
     @property
     def region(self):
@@ -144,7 +155,10 @@ class ServerData(object):
 
         :return: The region configured for this server (e.g. DFW)
         """
-        return self._config.get("Region")
+        if isinstance(self._config, configparser.SectionProxy):
+            return self._config.get('Region')
+        else:
+            return self._config['Region']
 
     @property
     def server_id(self):
@@ -220,7 +234,10 @@ class ServerData(object):
 
         :return: The configured SaveTimeoutMinutes, in minutes
         """
-        return self._config.getint("SaveTimeoutMinutes")
+        if isinstance(self._config, configparser.SectionProxy):
+            return self._config.getint('SaveTimeoutMinutes')
+        else:
+            return self._config['SaveTimeoutMinutes']
 
     @property
     def save_timeout_seconds(self):
@@ -236,7 +253,10 @@ class ServerData(object):
 
         :return: The configured RetainImageMinutes, in minutes
         """
-        return self._config.getint("RetainImageMinutes")
+        if isinstance(self._config, configparser.SectionProxy):
+            return self._config.getint('RetainImageMinutes')
+        else:
+            return self._config['RetainImageMinutes']
 
     @property
     def retain_image_seconds(self):
@@ -260,9 +280,9 @@ class ImageData(object):
         self._server_fqdn = server_fqdn
         self._image_dict = image_dict
         self._created = datetime.datetime.strptime(
-            self._image_dict["created"], RAX_DATE_FORMAT)
+            self._image_dict['created'], RAX_DATE_FORMAT)
         self._updated = datetime.datetime.strptime(
-            self._image_dict["updated"], RAX_DATE_FORMAT)
+            self._image_dict['updated'], RAX_DATE_FORMAT)
 
     def __str__(self):
         # noinspection PyCallByClass
@@ -271,7 +291,7 @@ class ImageData(object):
         :return: The server_fqdn, name, image_id, created, updated,
          status, progress values
         """
-        return "<{}: {} [{}] C:{} U:{} [{}] {}%%>".format(
+        return '<{}: {} [{}] C:{} U:{} [{}] {}%>'.format(
             self.server_fqdn, self.name, self.image_id,
             self.created, self.updated,
             self.status, self.progress)
@@ -290,7 +310,7 @@ class ImageData(object):
 
         :return: The image's id
         """
-        return self._image_dict["id"]
+        return self._image_dict['id']
 
     @property
     def name(self):
@@ -298,7 +318,7 @@ class ImageData(object):
 
         :return: The image's name
         """
-        return self._image_dict["name"]
+        return self._image_dict['name']
 
     @property
     def created(self):
@@ -322,7 +342,7 @@ class ImageData(object):
 
         :return: The image's status attribute
         """
-        return self._image_dict["status"]
+        return self._image_dict['status']
 
     @property
     def saving(self):
@@ -330,7 +350,7 @@ class ImageData(object):
 
         :return: True if the status is "SAVING", otherwise False
         """
-        return self.status == "SAVING"
+        return self.status == 'SAVING'
 
     @property
     def active(self):
@@ -338,7 +358,7 @@ class ImageData(object):
 
         :return: True if the status is "ACTIVE", otherwise False
         """
-        return self.status == "ACTIVE"
+        return self.status == 'ACTIVE'
 
     @property
     def progress(self):
@@ -346,4 +366,4 @@ class ImageData(object):
 
         :return: The progress of the image
         """
-        return self._image_dict["progress"]
+        return self._image_dict['progress']
