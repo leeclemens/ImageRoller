@@ -1,0 +1,213 @@
+#!/usr/bin/env python3
+# The MIT License (MIT)
+#
+# Copyright (c) 2017 Lee Clemens Computing Services, LLC
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+"""
+Check Rackspace Server Image age
+  This should correspond with the age configured by ImageRoller
+"""
+import datetime
+import json
+import logging
+import sys
+
+import requests
+
+import imageroller
+import imageroller.data
+import imageroller.utils
+
+STATUS_OK = 0
+STATUS_WARNING = 1
+STATUS_CRITICAL = 2
+STATUS_UNKNOWN = 3
+
+PREFIXES = {
+    STATUS_OK: 'OK',
+    STATUS_WARNING: 'WARNING',
+    STATUS_CRITICAL: 'CRITICAL',
+    STATUS_UNKNOWN: 'UNKNOWN'
+}
+
+
+def usage():
+    print('Usage: %s -s server -r region -w hours -c hours'
+          ' -u auth_user -k auth_key' % sys.argv[0])
+    print('\t-s server      server name')
+    print('\t-r region      region')
+    print('\t-w hours       warning threshold')
+    print('\t-c hours       critical threshold')
+    print('\t-u auth_user   auth user')
+    print('\t-k auth_key    auth key')
+    sys.exit(STATUS_UNKNOWN)
+
+
+def parse_args():
+    args_dict = {
+        'server': None,
+        'region': None,
+        'warning': None,
+        'critical': None,
+        'auth_user': None,
+        'auth_key': None,
+    }
+    i = 1
+    while i < len(sys.argv):
+        arg = sys.argv[i]
+        if arg == '-s':
+            if i + 1 < len(sys.argv):
+                i += 1
+                args_dict['server'] = sys.argv[i]
+            else:
+                print('-s requires a value, server')
+                usage()
+        elif arg == '-r':
+            if i + 1 < len(sys.argv):
+                i += 1
+                args_dict['region'] = sys.argv[i]
+            else:
+                print('-r requires a value, rackspace region')
+                usage()
+        elif arg == '-w':
+            if i + 1 < len(sys.argv):
+                i += 1
+                try:
+                    args_dict['warning'] = int(sys.argv[i])
+                except ValueError:
+                    print('-w warning hours must be an integer')
+                    usage()
+            else:
+                print('-w requires a value, warning hours')
+                usage()
+        elif arg == '-c':
+            if i + 1 < len(sys.argv):
+                i += 1
+                try:
+                    args_dict['critical'] = int(sys.argv[i])
+                except ValueError:
+                    print('-c critical hours must be an integer')
+                    usage()
+            else:
+                print('-c requires a value, critical hours')
+                usage()
+        elif arg == '-u':
+            if i + 1 < len(sys.argv):
+                i += 1
+                args_dict['auth_user'] = sys.argv[i]
+            else:
+                print('-u requires a value, api user')
+                usage()
+        elif arg == '-k':
+            if i + 1 < len(sys.argv):
+                i += 1
+                args_dict['auth_key'] = sys.argv[i]
+            else:
+                print('-k requires a value, api key')
+                usage()
+        i += 1
+    return args_dict
+
+
+def check_images(server_data, warning, critical):
+    server_data.server_id = imageroller.utils.get_server_id(
+        server_data, logging.getLogger('check_rax_image'))
+    images_data = imageroller.utils.get_images(
+        server_data, logging.getLogger('check_rax_image'))
+    now = datetime.datetime.now()
+    crit_date = now - datetime.timedelta(hours=critical)
+    warn_date = now - datetime.timedelta(hours=warning)
+    current_state = STATUS_UNKNOWN
+    for image_data in images_data:
+        print(image_data)
+        if image_data.active:
+            if image_data.updated < crit_date:
+                if current_state >= STATUS_UNKNOWN:
+                    current_state = STATUS_CRITICAL
+            elif image_data.updated < warn_date:
+                if current_state >= STATUS_CRITICAL:
+                    current_state = STATUS_WARNING
+            elif current_state >= STATUS_WARNING:
+                current_state = STATUS_OK
+    if len(images_data) <= 0:
+        print('No images found')
+    sys.exit(current_state)
+
+
+def run(server, region, warning, critical, auth_user, auth_key):
+    server_data = imageroller.data.ServerData(
+        server, {'Region': region}, False, False)
+    ident_response = imageroller.utils.get_identity_response(
+        (auth_user, auth_key))
+    if ident_response.status_code == requests.codes.ok:
+        rax_id_data = json.loads(ident_response.content.decode())
+        server_data.token = rax_id_data['access']['token']['id']
+        servers_url, images_url = imageroller.utils. \
+            parse_rax_id_data(rax_id_data, server_data.region)
+        if servers_url is not None and images_url is not None:
+            server_data.servers_url = servers_url
+            server_data.images_url = images_url
+            check_images(server_data, warning, critical)
+        else:
+            raise Exception(
+                'Failed to determine servers_url ({})'
+                ' or images_url ({}) for {} in region {}'.format(
+                    servers_url, images_url, server_data.name,
+                    server_data.region))
+    else:
+        print('Authentication Failure: %s %s' %
+              (ident_response.status_code,
+               ident_response.content))
+        sys.exit(STATUS_CRITICAL)
+
+
+def _config_logger():
+    """Configure the logger instance
+    """
+    root_logger = logging.getLogger('check_rax_image')
+    root_logger.setLevel(logging.DEBUG)
+    for hdlr in root_logger.handlers:
+        root_logger.removeHandler(hdlr)
+    formatter = logging.Formatter('%(message)s')
+    hdlr = logging.StreamHandler(sys.stdout)
+    hdlr.setFormatter(formatter)
+    root_logger.addHandler(hdlr)
+
+
+if __name__ == "__main__":
+    try:
+        if len(sys.argv) == 1 or "-h" in sys.argv or "--help" in sys.argv:
+            usage()
+        else:
+            args = parse_args()
+            for arg_ in args.keys():
+                if args[arg_] is None:
+                    print('%s must be provided' % arg_)
+                    usage()
+            if args['warning'] > args['critical']:
+                print('Warning threshold must be less than critical threshold')
+                sys.exit(STATUS_CRITICAL)
+            run(args['server'], args['region'],
+                args['warning'], args['critical'],
+                args['auth_user'], args['auth_key'])
+    except Exception as e:
+        print('%s: Unhandled exception %s' % (sys.argv[0], type(e)))
+        print(e)
+        sys.exit(STATUS_CRITICAL)
