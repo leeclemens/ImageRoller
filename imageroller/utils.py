@@ -205,22 +205,9 @@ def get_images(server_data, log):
     # Enhance: Query images detail for attributes such as 'protected'
     # pylint: disable=no-member
     if images_response.status_code == requests.codes.ok:
+        images = json.loads(images_response.content.decode())
         try:
-            images = json.loads(images_response.content.decode())
-            _trace_json("Images Response JSON", images, log)
-            images_data = []
-            for image in images["images"]:
-                image_data = imageroller.data.ImageData(server_data.name,
-                                                        image)
-                try:
-                    # This raises ValueError if format doesn't match
-                    datetime.datetime.strptime(image_data.name,
-                                               IMAGE_NAME_TEMPLATE)
-                    log.debug("Found image %s", image_data)
-                    images_data.append(image_data)
-                except ValueError:
-                    log.debug("Ignoring image %s", image_data)
-            return images_data
+            return _get_images(server_data, images, log)
         except ValueError:
             raise Exception("Failed to parse images: %s" %
                             images_response.content)
@@ -228,6 +215,23 @@ def get_images(server_data, log):
         raise Exception("Image request failed: %s %s" %
                         (images_response.status_code,
                          images_response.content))
+
+
+def _get_images(server_data, images, log):
+    _trace_json("Images Response JSON", images, log)
+    images_data = []
+    for image in images["images"]:
+        image_data = imageroller.data.ImageData(server_data.name,
+                                                image)
+        try:
+            # This raises ValueError if format doesn't match
+            datetime.datetime.strptime(image_data.name,
+                                       IMAGE_NAME_TEMPLATE)
+            log.debug("Found image %s", image_data)
+            images_data.append(image_data)
+        except ValueError:
+            log.debug("Ignoring image %s", image_data)
+    return images_data
 
 
 def _is_any_in_progress(images, log):
