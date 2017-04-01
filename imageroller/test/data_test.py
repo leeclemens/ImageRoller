@@ -105,8 +105,8 @@ class ConfigDataTestCase(unittest.TestCase):
         self.assertEqual(len(config_data.server_data), 0)
         # Set auto_enable to True so it doesn't attempt to access ConfigData
         # noinspection PyTypeChecker
-        config_data.server_data = imageroller.data.ServerData("test", None,
-                                                              True, False)
+        config_data.server_data = imageroller.data.ServerData(
+            "test", {'Region': 'US'}, True, False)
         self.assertEqual(len(config_data.server_data), 1)
 
     def test_server_data_not_enabled(self):
