@@ -33,7 +33,7 @@ shutil.copyfile('imageroller/main.py', 'build/imageroller')
 
 setup(
     name='imageroller',
-    version='0.9.0',
+    version='0.9.1',
     description='Rackspace Server Image Creator',
     long_description="""
     A simple backup utility utilizing saved images
