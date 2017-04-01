@@ -320,8 +320,7 @@ def _delete_expired_images(utcnow, server_data, images, log):
     else:
         retain_timedelta = datetime.timedelta(
             seconds=server_data.retain_image_seconds)
-        # pylint: disable=fixme
-        # TODO: Bug #264 - Support more than one non-stale image
+        # Bug #264 - Support more than one non-stale image
         for image_ in images:
             if image_.active and (utcnow - image_.updated) > retain_timedelta:
                 log.info("Deleting image: %s", image_)
@@ -353,8 +352,7 @@ def _needs_image(utcnow, server_data, images, log):
         # Using created here,
         #  where updated is used elsewhere, may cause overlap?
         if image.active and (utcnow - image.created) < retain_timedelta:
-            # pylint: disable=fixme
-            # TODO: Bug #264 - Support more than one non-stale image
+            # Bug #264 - Support more than one non-stale image
             log.info("Found an active image within retention [%sm]: %s",
                      server_data.retain_image_minutes, image.name)
             return False

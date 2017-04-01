@@ -92,8 +92,7 @@ def execute(log_level, config_data, auth_tuple):
         roller_mgr = imageroller.threads.roller_manager.RollerManager(
             config_data, auth_tuple)
         roller_mgr.start()
-        # pylint: disable=fixme
-        # TODO: Bug #263 - Add signal handler to exit
+        # Bug #263 - Add signal handler to exit
         roller_mgr.join()
         LOG.info("All Rollers and Roller Manager exited")
     # pylint: disable=broad-except
@@ -255,8 +254,7 @@ def format_logger(level):
     #  This feature is being removed by major browsers and deprecated by RFC
     #  2818. (See https://github.com/shazow/urllib3/issues/497 for details.)
     if level >= logging.WARNING:
-        # pylint: disable=fixme
-        # TODO: Bug #262 - Handle urllib3 SubjectAltNameWarning
+        # Bug #262 - Handle urllib3 SubjectAltNameWarning
         warnings.filterwarnings("ignore")
         # import urllib3
         # import urllib3.exceptions
