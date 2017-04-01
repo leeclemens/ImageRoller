@@ -67,16 +67,13 @@ class RollerManager(threading.Thread):
         :type auth_data: tuple
         :param auth_data: Auth data tuple of (username, API key)
         """
-        # pylint: disable=no-member
-        self.log.trace("Identity Request: %s data=%s headers=%s",
-                       imageroller.utils.IDENTITY_URL,
-                       imageroller.utils.get_auth_body_data(auth_data,
-                                                            hide_key=True)
-                       if self.log.isEnabledFor(
-                           imageroller.Logger.TRACE) else "",
-                       imageroller.utils.get_json_content_header()
-                       if self.log.isEnabledFor(
-                           imageroller.Logger.TRACE) else "")
+        if self.log.isEnabledFor(imageroller.Logger.TRACE):
+            # pylint: disable=no-member
+            self.log.trace("Identity Request: %s data=%s headers=%s",
+                           imageroller.utils.IDENTITY_URL,
+                           imageroller.utils.get_auth_body_data(auth_data,
+                                                                hide_key=True),
+                           imageroller.utils.get_json_content_header())
         ident_response = imageroller.utils.get_identity_response(auth_data)
         # pylint: disable=no-member
         self.log.trace("Identity Response: %s", ident_response)
@@ -89,19 +86,7 @@ class RollerManager(threading.Thread):
                     "Identity Response JSON: %s",
                     pprint.pformat(rax_id_data) if self.log.isEnabledFor(
                         imageroller.Logger.TRACE) else "")
-                for server_data in self.config_data.server_data:
-                    server_data.token = rax_id_data["access"]["token"]["id"]
-                    servers_url, images_url = imageroller.utils. \
-                        parse_rax_id_data(rax_id_data, server_data.region)
-                    if servers_url is not None and images_url is not None:
-                        server_data.servers_url = servers_url
-                        server_data.images_url = images_url
-                    else:
-                        raise Exception(
-                            "Failed to determine servers_url ({})"
-                            " or images_url ({}) for {} in region {}".format(
-                                servers_url, images_url, server_data.name,
-                                server_data.region))
+                self.__do_get_identity_info(rax_id_data)
             except ValueError:
                 raise Exception("Failed to parse Authentication Data: %s" %
                                 ident_response.content)
@@ -109,6 +94,21 @@ class RollerManager(threading.Thread):
             raise Exception("Authentication Failure: %s %s" %
                             (ident_response.status_code,
                              ident_response.content))
+
+    def __do_get_identity_info(self, rax_id_data):
+        for server_data in self.config_data.server_data:
+            server_data.token = rax_id_data["access"]["token"]["id"]
+            servers_url, images_url = imageroller.utils. \
+                parse_rax_id_data(rax_id_data, server_data.region)
+            if servers_url is not None and images_url is not None:
+                server_data.servers_url = servers_url
+                server_data.images_url = images_url
+            else:
+                raise Exception(
+                    "Failed to determine servers_url ({})"
+                    " or images_url ({}) for {} in region {}".format(
+                        servers_url, images_url, server_data.name,
+                        server_data.region))
 
     def start(self):
         super().start()
