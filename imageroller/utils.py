@@ -127,13 +127,7 @@ def get_server_id(server_data, log):
     if servers_response.status_code == requests.codes.ok:
         try:
             servers = json.loads(servers_response.content.decode())
-            _trace_json("Servers Response JSON", servers, log)
-            for server in servers["servers"]:
-                log.debug("Server: %s", server)
-                if server["name"].lower() == server_data.name:
-                    log.debug("Found Server ID: %s", server["id"])
-                    return server["id"]
-            return None
+            return _get_server_id(server_data, servers, log)
         except ValueError:
             raise Exception("Failed to parse images: %s" %
                             servers_response.content)
@@ -141,6 +135,16 @@ def get_server_id(server_data, log):
         raise Exception("Image request failed: %s %s" %
                         (servers_response.status_code,
                          servers_response.content))
+
+
+def _get_server_id(server_data, servers, log):
+    _trace_json("Servers Response JSON", servers, log)
+    for server in servers["servers"]:
+        log.debug("Server: %s", server)
+        if server["name"].lower() == server_data.name:
+            log.debug("Found Server ID: %s", server["id"])
+            return server["id"]
+    return None
 
 
 def get_image_name(utcnow, name_template=IMAGE_NAME_TEMPLATE):
