@@ -112,8 +112,7 @@ class ConfigDataTestCase(unittest.TestCase):
     def test_server_data_not_enabled(self):
         """Test setting ServerData not enabled is not added to the server_data
         """
-        # pylint: disable=fixme
-        # TODO: Bug #267 - Create Valid Config object to pass to ServerData
+        # Bug #267 - Create Valid Config object to pass to ServerData
         # config_data = imageroller.data.ConfigData(1)
         # self.assertEqual(len(config_data.server_data), 0)
         # noinspection PyTypeChecker
