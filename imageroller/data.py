@@ -100,15 +100,34 @@ class ServerData(object):
         :param force: -f, --force specified on command-line
         """
         self._name = name
-        self._config = config
         self._auto_enable = auto_enable
         self._force = force
+        if isinstance(config, configparser.SectionProxy):
+            self._enabled = self._auto_enable or config.getboolean(
+                'Enabled', fallback=False)
+            self._region = config.get('Region')
+            self._save_timeout_minutes = config.getint(
+                'SaveTimeoutMinutes')
+            self._retain_image_minutes = config.getint(
+                'RetainImageMinutes')
+        else:
+            self._enabled = self._auto_enable or self.__get_optional_config(
+                config, 'Enabled')
+            self._region = config['Region']
+            self._save_timeout_minutes = self.__get_optional_config(
+                config, 'SaveTimeoutMinutes')
+            self._retain_image_minutes = self.__get_optional_config(
+                config, 'RetainImageMinutes')
         # server_id, token, servers_url, images_url
         self._identity_info = [None, None, None, None]
 
     def __str__(self):
         return '%s  Region: %s  AutoEnable: %s  Force: %s' % (
             self.name, self.region, self.auto_enable, self.force)
+
+    @staticmethod
+    def __get_optional_config(config, config_key):
+        return config[config_key] if config_key in config else None
 
     @property
     def name(self):
@@ -140,14 +159,7 @@ class ServerData(object):
 
         :return: True if auto-enabled or configured to be enabled
         """
-        if self.auto_enable:
-            return self.auto_enable
-        else:
-            if isinstance(self._config, configparser.SectionProxy):
-                return self._config.getboolean('Enabled',
-                                               fallback=False)
-            else:
-                return self._config['Enabled']
+        return self._enabled
 
     @property
     def region(self):
@@ -155,10 +167,7 @@ class ServerData(object):
 
         :return: The region configured for this server (e.g. DFW)
         """
-        if isinstance(self._config, configparser.SectionProxy):
-            return self._config.get('Region')
-        else:
-            return self._config['Region']
+        return self._region
 
     @property
     def server_id(self):
@@ -234,10 +243,7 @@ class ServerData(object):
 
         :return: The configured SaveTimeoutMinutes, in minutes
         """
-        if isinstance(self._config, configparser.SectionProxy):
-            return self._config.getint('SaveTimeoutMinutes')
-        else:
-            return self._config['SaveTimeoutMinutes']
+        return self._save_timeout_minutes
 
     @property
     def save_timeout_seconds(self):
@@ -253,10 +259,7 @@ class ServerData(object):
 
         :return: The configured RetainImageMinutes, in minutes
         """
-        if isinstance(self._config, configparser.SectionProxy):
-            return self._config.getint('RetainImageMinutes')
-        else:
-            return self._config['RetainImageMinutes']
+        return self._retain_image_minutes
 
     @property
     def retain_image_seconds(self):
